@@ -3,17 +3,25 @@
 // 載入用戶資料進行身分驗證
 const users = require('./users.json'); 
 
-// *** 【重要】此函式需要連接實際的資料庫服務 ***
-// 在您的實際程式中，這裡會是連接 Firebase SDK 或其他資料庫的程式碼。
 async function updateProgressDatabase(targetUsername, chapterId, noteContent) {
-    // 範例：假設這是寫入 Firebase 的程式碼
-    // await db.collection('progress').doc(targetUsername).update({
-    //     [`chapters.${chapterId}.manager_note`]: noteContent
-    // });
-    
-    // 如果您使用 Firebase，確保在 Netlify Function 中正確初始化和使用 Firebase Admin SDK
-    console.log(`[DB Write MOCK] User: ${targetUsername}, Chapter: ${chapterId}, Note: "${noteContent}"`);
-    return true; // 假設寫入成功
+    try {
+        const db = admin.firestore(); // 假設 admin 已初始化
+        const progressDocRef = db.collection('progressData').doc(targetUsername);
+
+        // 使用 field path 語法來更新 document 中的特定欄位。
+        // 這裡的 chapterId 是進度表項目的索引 (例如: '13', '14')
+        const updateObject = {};
+        updateObject[`${chapterId}.manager_note`] = noteContent;
+
+        // 使用 set({ merge: true }) 或 update() 來寫入備註，避免覆蓋其他進度數據
+        await progressDocRef.set(updateObject, { merge: true }); 
+        
+        console.log(`[DB Write SUCCESS] User: ${targetUsername}, Progress Index: ${chapterId}, Note: "${noteContent}"`);
+        return true; 
+    } catch (error) {
+        console.error('Firebase Write Error:', error);
+        throw new Error('Failed to write note to database.'); // 拋出錯誤讓外部 catch 處理
+    }
 }
 
 
