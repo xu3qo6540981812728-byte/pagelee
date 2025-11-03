@@ -47,5 +47,27 @@
         "name": "訪客",
         "role": "agent",
         "team": "B組"
-    }
+    },
+    {
+        "username": "manager",
+        "password": "manager",
+        "name": "主管範例",
+        "role": "manager",
+        "team": "C組"
+    },
+     {
+        "username": "ABC",
+        "password": "ABC",
+        "name": "業務範例1",
+        "role": "agent",
+        "team": "C組"
+    },
+    {
+        "username": "EFG",
+        "password": "EFG",
+        "name": "業務範例2",
+        "role": "agent",
+        "team": "C組"
+    },
 ]
+
