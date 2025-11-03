@@ -1,0 +1,7 @@
+# 檔案路徑: netlify.toml
+
+[build]
+  # 網站的公開資料夾
+  publish = "public/"
+  # 後端 Serverless Functions 的位置
+  functions = "netlify/functions/"
