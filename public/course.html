@@ -3278,7 +3278,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const secs = Math.floor(seconds % 60);
         return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
+/**
+ * 函數：從後端 API 獲取組員列表，並填充下拉選單
+ * @param {string} managerTeam - 當前登入主管所屬的組別
+ */
+async function fetchTeamMembers(managerTeam) {
+    const loggedInUser = sessionStorage.getItem('loggedInUser');
+    try {
+        // 呼叫新的 Netlify Function
+        const response = await fetch('/.netlify/functions/get_users');
+        const data = await response.json();
+        
+        if (data.success) {
+            // 篩選出同組且為 agent 角色（組員）的成員
+            const teamMembers = data.users.filter(
+                user => user.team === managerTeam && user.role === 'agent'
+            );
 
+            const allUsers = data.users; // 取得所有使用者，包含主管，用於查找名字
+            
+            const selectElement = document.getElementById('team-member-select');
+            const loggedInName = sessionStorage.getItem('loggedInName');
+            
+            // 1. 預設選項：主管自己的進度
+            selectElement.innerHTML = `<option value="${loggedInUser}" selected>個人進度 (${loggedInName})</option>`;
+
+            // 2. 填充組員選項
+            teamMembers.forEach(member => {
+                const option = document.createElement('option');
+                option.value = member.username;
+                option.textContent = `${member.name} (${member.username})`;
+                selectElement.appendChild(option);
+            });
+            
+            // 3. 監聽選單切換事件 (從這裡搬過來，避免重複註冊)
+            selectElement.addEventListener('change', (e) => {
+                const selectedUsername = e.target.value;
+                const selectedUser = allUsers.find(u => u.username === selectedUsername);
+
+                currentViewingUser = selectedUsername;
+                
+                // 由於這裡無法從 Firebase 取得 name，因此從 allUsers 找到名字
+                currentProgressName.textContent = selectedUser ? selectedUser.name : '個人進度';
+                
+                // 重新載入並渲染進度
+                loadProgressFromFirebase();
+            });
+
+        } else {
+             console.error('API回傳失敗:', data.message);
+        }
+    } catch (error) {
+        console.error('Failed to fetch team members:', error);
+        const managerPanel = document.getElementById('manager-control-panel');
+        if (managerPanel) {
+            managerPanel.innerHTML = `<p class="text-red-500 p-4">無法載入組員列表，請檢查連線或後台配置。</p>`;
+        }
+    }
+}
 function resetAudioPlayerUI() {
     progressBar.value = 0;
     timeDisplay.textContent = '00:00 / 00:00'; 
@@ -4087,43 +4144,9 @@ function handleProgressLogic(sectionId) {
     if (loggedInRole === 'manager') {
         managerControlPanel.classList.remove('hidden');
         
-        // 1. 取得所有用戶並篩選出同組業務 (由於沒有後端 API，這裡暫時使用 login.js 的靜態列表)
-        const allUsers = [
-            { username: 'C73449', name: '李培智', role: 'manager', team: 'A組' },
-            { username: 'C84730', name: '李志仁', role: 'agent', team: 'A組' },
-            { username: 'C80624', name: '葉欣宜', role: 'agent', team: 'A組' },
-            { username: 'C91517', name: '劉懷懋', role: 'agent', team: 'A組' },
-            { username: 'C87976', name: '林俊翔', role: 'agent', team: 'A組' },
-            { username: 'shinelee', name: '李正翔', role: 'manager', team: 'B組' },
-            { username: 'guest', name: '訪客', role: 'agent', team: 'B組' },
-            { username: 'manager', name: '主管範例', role: 'manager', team: 'C組' },
-            { username: 'business1', name: '業務範例1', role: 'agent', team: 'C組' },
-            { username: 'business2', name: '業務範例2', role: 'agent', team: 'C組' },
-        ];
-        
-        const teamMembers = allUsers.filter(user => 
-            (user.team === loggedInTeam && user.username !== loggedInUser) || user.username === loggedInUser
-        );
+        // 核心修改點：動態獲取並填充組員列表（已在上方新增 fetchTeamMembers 函數）
+        fetchTeamMembers(loggedInTeam); 
 
-        // 2. 渲染業務清單
-        teamMemberSelect.innerHTML = `<option value="${loggedInUser}" selected>個人進度 (${sessionStorage.getItem('loggedInName')})</option>`;
-        teamMembers.filter(user => user.username !== loggedInUser).forEach(user => {
-            teamMemberSelect.innerHTML += `<option value="${user.username}">${user.name} (${user.username})</option>`;
-        });
-
-        // 3. 監聽選單切換事件
-        teamMemberSelect.addEventListener('change', (e) => {
-            const selectedUsername = e.target.value;
-            const selectedUser = teamMembers.find(u => u.username === selectedUsername);
-            
-            currentViewingUser = selectedUsername;
-            currentProgressName.textContent = selectedUser.name;
-            
-            // 重新載入並渲染進度
-            loadProgressFromFirebase();
-            
-            // 由於這裡無法從 Firebase 取得 name，因此需要從靜態列表取得。
-        });
     } else {
         // 業務帳號隱藏面板，並在進度表上顯示是「誰的」進度
         const loggedInName = sessionStorage.getItem('loggedInName');
@@ -4132,6 +4155,7 @@ function handleProgressLogic(sectionId) {
             progressHeader.innerHTML = `總體進度：0% <span class="text-sm font-normal text-indigo-700 ml-2">(${loggedInName} 的進度)</span>`;
         }
     }
+       
     const carouselTitle = document.getElementById('carousel-title');
     const clickLayer = document.getElementById('carousel-click-layer');
     const slides = document.querySelectorAll('.carousel-slide');
@@ -4241,6 +4265,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
