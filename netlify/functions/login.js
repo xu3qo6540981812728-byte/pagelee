@@ -1,16 +1,6 @@
-// 【最終版】netlify/functions/login.js
-const fs = require('fs');
-const path = require('path');
+const users = require('./users.json'); 
+// **********************************************
 
-const users = [
-    { username: 'C73449', password: '19940201', name: '李培智', role: 'manager', team: 'A組' }, 
-    { username: 'C84730', password: '19851010', name: '李志仁', role: 'agent', team: 'A組' }, 
-    { username: 'C80624', password: '19930109', name: '葉欣宜', role: 'agent', team: 'A組' },  
-    { username: 'C91517', password: '20010721', name: '劉懷懋', role: 'agent', team: 'A組' },
-    { username: 'C87976', password: '19980216', name: '林俊翔', role: 'agent', team: 'A組' },
-    { username: 'shinelee', password: 'shinelee', name: '李正翔', role: 'manager', team: 'B組' },
-    { username: 'guest', password: 'guest', name: '訪客', role: 'agent', team: 'B組' },
-];
 
 exports.handler = async function(event, context) {
     
@@ -23,14 +13,26 @@ exports.handler = async function(event, context) {
             };
         }
         
-        const { username, password } = JSON.parse(event.body);
+        // 確保 body 存在且為 JSON 格式
+        let body;
+        try {
+            body = JSON.parse(event.body);
+        } catch (e) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({ success: false, message: 'Invalid JSON body' })
+            };
+        }
 
+        const { username, password } = body;
+
+        // 登入邏輯不變，但 'users' 已經從外部載入
         const foundUser = users.find(
             user => user.username === username && user.password === password
         );
 
         if (foundUser) {
-            // 登入成功，回傳成功狀態、使用者帳號，【新增回傳 name, role, team】
+            // 登入成功，回傳所有使用者資訊
             return {
                 statusCode: 200,
                 body: JSON.stringify({ 
@@ -47,14 +49,11 @@ exports.handler = async function(event, context) {
                 body: JSON.stringify({ success: false, message: '帳號或密碼錯誤' })
             };
         }
-    } catch (error) { 
-        // 捕獲任何解析 JSON 或其他執行錯誤
-        console.error("Login Function Error: ", error);
-        return { 
-            statusCode: 500, 
-            body: JSON.stringify({ message: '伺服器發生內部錯誤' }) 
+    } catch (error) {
+        console.error('Login function error:', error.toString());
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ success: false, message: '伺服器內部錯誤' })
         };
     }
 };
-
-
