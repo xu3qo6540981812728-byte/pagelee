@@ -3963,86 +3963,103 @@ function handleProgressLogic(sectionId) {
     renderProgressTable();
     updateProgressDisplay();
 }
-    function renderProgressTable() {
-        if (!progressTableBody) return; 
-        progressTableBody.innerHTML = '';
-        const isAgent = loggedInRole === 'agent';
-        const disabledAttr = isAgent ? 'disabled' : '';
-        progressItems.forEach((item, index) => {
-            if (item.type === 'header') {
-                const headerDiv = document.createElement('div');
-                headerDiv.innerHTML = `<div class="py-3 px-4 bg-slate-200 text-slate-700 font-bold text-base md:rounded-none">${item.name}</div>`;
-                progressTableBody.appendChild(headerDiv);
-                return;
-            }
-            const isChecked = progressData[index]?.checked || false;
-            const completionDate = progressData[index]?.completionDate || '';
-            const itemWrapper = document.createElement('div');
-            itemWrapper.className = 'progress-item grid grid-cols-1 md:grid-cols-[0.5fr_50px_200px_1.5fr] gap-x-4 border-t border-slate-200 px-4 py-4 hover:bg-slate-50';
-            let countInputsHTML = '';
-           if (item.counts) {
-    // 遍歷每個子項目名稱，為其建立一條獨立的 Grid 行
-    item.counts.forEach(countName => {
-        const value = progressData[index]?.counts?.[countName] || '';
-        const countItemWrapper = document.createElement('div');
+ function renderProgressTable() {
+    if (!progressTableBody) return;
+    progressTableBody.innerHTML = '';
+    const isAgent = loggedInRole === 'agent';
+    // 主管/總監 只能修改進度表中的「勾選狀態」和「備註/計數」，不能修改項目名稱的狀態
+    const progressInputDisabledAttr = (loggedInRole === 'manager' || loggedInRole === 'director') ? '' : 'disabled';
+    const remarkDisabledAttr = (loggedInRole === 'manager' || loggedInRole === 'director') ? '' : 'disabled';
+
+
+    // 預設 Grid 模板：[項目名稱] [勾選] [備註] [次數紀錄]
+    const defaultGrid = 'progress-item grid grid-cols-1 md:grid-cols-[1fr_50px_1.5fr_0.1fr] gap-x-4 border-t border-slate-200 px-4 py-4 hover:bg-slate-50';
+    // 計數項目的 Grid 模板 (留更多空間給次數)
+    const countGrid = 'progress-item grid grid-cols-1 md:grid-cols-[0.5fr_50px_200px_1.5fr] gap-x-4 border-t border-slate-200 px-4 py-2 hover:bg-slate-50';
+
+
+    progressItems.forEach((item, index) => {
+        // --- 變數在每次迴圈開始時宣告並初始化 ---
+        let isChecked = progressData[index]?.checked || false;
+        let completionDate = progressData[index]?.completionDate || '';
         
-        // 核心：使用完整的 Grid 結構 [項目名稱] [打勾] [備註] [次數]
-        countItemWrapper.className = 'progress-item grid grid-cols-1 md:grid-cols-[0.5fr_50px_200px_1.5fr] gap-x-4 border-t border-slate-200 px-4 py-2 hover:bg-slate-50';
+        if (item.type === 'header') {
+            const headerDiv = document.createElement('div');
+            headerDiv.innerHTML = `<div class="py-3 px-4 bg-slate-200 text-slate-700 font-bold text-base md:rounded-none">${item.name}</div>`;
+            progressTableBody.appendChild(headerDiv);
+            return;
+        }
 
-        // 核心：將每個子項數據放入對應的 Grid 欄位
-        countItemWrapper.innerHTML = `
-            <div class="flex items-center text-slate-700 font-medium pl-6 text-sm">
-                ${countName} 
-            </div>
+        // --- 處理帶有計數的特殊項目（觀摩, 陪同自行作業） ---
+        if (item.counts) {
             
-            <div></div> 
+            // 遍歷每個子項目名稱，為其建立一條獨立的 Grid 行
+            item.counts.forEach(countName => {
+                const value = progressData[index]?.counts?.[countName] || '';
+                const countItemWrapper = document.createElement('div');
+                const itemRemark = progressData[index]?.remark?.[countName] || '';
+                
+                // 採用專門的計數 Grid 模板
+                countItemWrapper.className = countGrid;
+                
+                // 核心：將每個子項數據放入對應的 Grid 欄位
+                countItemWrapper.innerHTML = `
+                    <div class="flex items-center text-slate-700 font-medium pl-6 text-sm">
+                        ${countName} 
+                    </div>
+                    
+                    <div></div> 
 
+                    <div class="flex flex-col space-y-1 mt-2 md:mt-0">
+                        <div class="text-xs text-slate-500 text-center md:text-sm md:text-slate-700 font-semibold">${completionDate ? `進度日期: ${completionDate}` : '未記錄日期'}</div>
+                        <textarea rows="3" ${remarkDisabledAttr} data-index="${index}" data-count-name="${countName}"
+                            class="remark-input count-remark-input w-full text-left border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-xs resize-none"
+                            placeholder="輸入備註">${itemRemark}</textarea>
+                    </div>
+
+                    <div class="flex items-center space-x-2 mt-2 md:mt-0 justify-start">
+                        <label class="text-slate-600 flex-shrink-0">${item.name} 次數:</label> 
+                        <input type="text" value="${value}" ${progressInputDisabledAttr} data-index="${index}" data-count-name="${countName}"
+                            class="count-input w-16 text-center border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="請輸入">
+                    </div>
+                `;
+                progressTableBody.appendChild(countItemWrapper);
+            });
+
+            return; // 處理完畢，跳過後續的普通項目渲染
+        }
+
+
+        // --- 處理普通單一項目（無 counts） ---
+        const itemWrapper = document.createElement('div');
+        
+        // 採用通用的 Grid 模板
+        itemWrapper.className = defaultGrid;
+
+        itemWrapper.innerHTML = ` 
+            <div class="flex items-center text-slate-700 font-medium"> 
+                ${item.name} 
+            </div> 
+            
+            <div class="flex items-center justify-start md:justify-center mt-2 md:mt-0"> 
+                <label class="flex items-center space-x-2 md:space-x-0 cursor-pointer"> 
+                    <span class="md:hidden text-slate-500">完成狀態(主管審核):</span> 
+                    <input type="checkbox" data-index="${index}" class="h-6 w-6 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 ${progressInputDisabledAttr}" ${isChecked ? 'checked' : ''} ${progressInputDisabledAttr}> 
+                </label> 
+            </div> 
+            
             <div class="flex flex-col space-y-1 mt-2 md:mt-0">
                 <div class="text-xs text-slate-500 text-center md:text-sm md:text-slate-700 font-semibold">${completionDate ? `進度日期: ${completionDate}` : '未記錄日期'}</div>
-                <textarea rows="3" ${disabledAttr} data-index="${index}" data-count-name="${countName}"
-                    class="remark-input count-remark-input w-full text-left border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-xs resize-none"
-                    placeholder="輸入備註">${progressData[index]?.remark?.[countName] || ''}</textarea>
+                <textarea rows="5" ${remarkDisabledAttr} data-index="${index}" 
+                    class="remark-input single-remark-input w-full text-left border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm resize-none" 
+                    placeholder="${isAgent ? '主管備註 (僅主管可填寫)' : '輸入備註'}">${progressData[index]?.remark || ''}</textarea>
             </div>
-
-            <div class="flex items-center space-x-2 mt-2 md:mt-0 justify-start">
-                <label class="text-slate-600 flex-shrink-0">${item.name} 次數:</label> 
-                <input type="text" value="${value}" ${disabledAttr} data-index="${index}" data-count-name="${countName}"
-                    class="count-input w-16 text-center border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="請輸入">
-            </div>
+            
+            <div class="mt-2 md:mt-0"></div> 
         `;
-        progressTableBody.appendChild(countItemWrapper);
+        progressTableBody.appendChild(itemWrapper);
     });
-
-    return; // 處理完畢，跳過後續的普通項目渲染
 }
-
-// --- 處理普通單一項目（無 counts） ---
-const isChecked = progressData[index]?.checked || false;
-const completionDate = progressData[index]?.completionDate || '';
-const itemWrapper = document.createElement('div');
-// 普通項目使用較寬的 [1fr_50px_1.5fr_0.1fr] 模板，將空間集中給前三欄
-itemWrapper.className = 'progress-item grid grid-cols-1 md:grid-cols-[1fr_50px_1.5fr_0.1fr] gap-x-4 border-t border-slate-200 px-4 py-4 hover:bg-slate-50';
-
-itemWrapper.innerHTML = ` 
-    <div class="flex items-center text-slate-700 font-medium"> 
-        ${item.name} 
-    </div> 
-    <div class="flex items-center justify-start md:justify-center mt-2 md:mt-0"> 
-        <label class="flex items-center space-x-2 md:space-x-0 cursor-pointer"> 
-            <span class="md:hidden text-slate-500">完成狀態(主管審核):</span> 
-            <input type="checkbox" data-index="${index}" class="h-6 w-6 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 ${disabledAttr}" ${isChecked ? 'checked' : ''} ${disabledAttr}> </label> 
-    </div> 
-    <div class="flex flex-col space-y-1 mt-2 md:mt-0">
-        <div class="text-xs text-slate-500 text-center md:text-sm md:text-slate-700 font-semibold">${completionDate ? `進度日期: ${completionDate}` : '未記錄日期'}</div>
-        <textarea rows="5" ${disabledAttr} data-index="${index}" 
-            class="remark-input single-remark-input w-full text-left border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm resize-none" 
-            placeholder="${isAgent ? '主管備註 (僅主管可填寫)' : '輸入備註'}">${progressData[index]?.remark || ''}</textarea>
-    </div>
-    <div class="mt-2 md:mt-0"></div> 
-`;
-            progressTableBody.appendChild(itemWrapper);
-        });
-    }
 
 
 
@@ -4400,6 +4417,7 @@ itemWrapper.innerHTML = ` 
     
 </body>
 </html>
+
 
 
 
