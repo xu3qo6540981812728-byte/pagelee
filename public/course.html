@@ -3345,11 +3345,11 @@ async function renderTeamProgressList(allUsers) {
     // 總結進度項目的名稱，用於表頭
     const progressItemNames = progressItems
         .filter(item => item.type !== 'header')
-        // 【Bug 2 修正點】：為實現垂直文字，先將項目名稱拆分成陣列
-        .map(item => item.name.split('')); 
+        // 【Bug 2 修正點】：使用完整名稱
+        .map(item => item.name); 
     
-    // 【Bug 1 修正點】：移除原有單一進度表使用的表頭
-    document.getElementById('progress-table').innerHTML = ''; // 清空預設的單一業務表頭
+    // 【Bug 1 修正點】：這裡確保清空的是進度內容區，而不是 Grid 標題
+    document.getElementById('progress-table').innerHTML = ''; 
     
     // 過濾出當前主管/總監權限下應看的業務清單
     const isDirector = loggedInRole === 'director';
@@ -3372,24 +3372,48 @@ async function renderTeamProgressList(allUsers) {
 
     const progressTableContainer = document.getElementById('progress-table');
     
-    // 創建表頭 - 實現垂直文字
-    // 【核心修正：垂直文字 CSS】
-    const verticalHeaderStyle = 'style="writing-mode: vertical-rl; min-width: 30px; padding: 4px 0px; line-height: 1.2; text-orientation: upright;"';
+    // 創建表頭 - 實現垂直文字 (CSS 旋轉)
     
-    let headerCells = progressItemNames.map(nameArray => 
-        `<th class="p-1 text-center font-bold text-xs" ${verticalHeaderStyle}>${nameArray.join('<br>')}</th>`
+    // 表頭儲存格樣式：預留高度給旋轉後的文字
+    const rotatedHeaderStyle = `
+        style="
+            height: 110px; /* 預留足夠高度給旋轉後的文字 */
+            min-width: 30px; /* 確保最小寬度 */
+            padding: 0px 4px; 
+            text-align: left;
+            line-height: 1;
+            font-size: 0.75rem; /* text-xs */
+        "
+    `;
+    // 文字旋轉樣式：將文字逆時針旋轉 90 度，並調整位置
+    const rotatedTextStyle = `
+        style="
+            transform: rotate(-90deg);
+            transform-origin: 0 0;
+            white-space: nowrap;
+            position: absolute;
+            top: 105px; /* 調整位置，讓文字底部對齊儲存格底部 */
+            left: 50%; /* 水平居中 */
+            margin-left: -40px; /* 調整水平偏移 */
+        "
+    `;
+    
+    let headerCells = progressItemNames.map(name => 
+        `<th class="p-1 text-center font-bold relative" ${rotatedHeaderStyle}>
+            <div ${rotatedTextStyle}>${name}</div>
+        </th>`
     ).join('');
     
     // 創建總覽表的內容
-    // 【Bug 3 修正點】：移除 overflow-x-auto，並使用 min-w-full 確保表格寬度佔滿
+    // 【Bug 3 修正點】：移除 w-full，讓表格寬度由內容決定（垂直表頭已極度壓縮寬度）
     let htmlContent = `
-        <div> 
-            <table class="w-full bg-white border border-slate-200">
+        <div class="w-full"> 
+            <table class="bg-white border border-slate-200">
                 <thead class="bg-indigo-600 text-white sticky top-0">
                     <tr>
-                        <th class="p-2 text-left font-bold w-32 sticky left-0 bg-indigo-600 z-10" style="min-width: 100px;">業務員 (點擊可修改)</th>
+                        <th class="p-2 text-left font-bold sticky left-0 bg-indigo-600 z-10" style="min-width: 120px;">業務員 (點擊可修改)</th>
                         ${headerCells}
-                        <th class="p-2 text-center font-bold w-16">總進度</th>
+                        <th class="p-2 text-center font-bold" style="min-width: 60px;">總進度</th>
                     </tr>
                 </thead>
                 <tbody id="team-progress-list-body">
@@ -3430,7 +3454,9 @@ async function renderTeamProgressList(allUsers) {
                 : `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
             
             // 壓縮單元格 padding
-            return `<td class="p-1 text-center border-l border-slate-200">${icon}</td>`;
+            return `<td class="p-1 text-center border-l border-slate-200">
+                ${icon}
+            </td>`;
         }).join('');
 
         const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -3438,7 +3464,7 @@ async function renderTeamProgressList(allUsers) {
         // 【新增】可點擊的業務名稱，點擊後會切換到該業務的個人進度頁
         htmlContent += `
             <tr class="border-b hover:bg-indigo-50 cursor-pointer user-progress-row" data-username="${user.username}" data-name="${user.name}">
-                <td class="p-2 font-medium text-indigo-700 sticky left-0 bg-white/90 border-r z-0" style="min-width: 100px;">
+                <td class="p-2 font-medium text-indigo-700 sticky left-0 bg-white/90 border-r z-0" style="min-width: 120px;">
                     ${user.name} (${user.username})
                 </td>
                 ${statusCells}
@@ -3449,9 +3475,7 @@ async function renderTeamProgressList(allUsers) {
 
     htmlContent += `</tbody></table></div>`;
     progressTableContainer.innerHTML = htmlContent;
-
-    // 【Bug 3 修正點】：隱藏單一業務進度表的 Grid Header 已經移到 handleProgressLogic 處理
-
+    
     // 監聽業務名稱的點擊事件
     progressTableContainer.querySelectorAll('.user-progress-row').forEach(row => {
         row.addEventListener('click', (e) => {
@@ -3466,7 +3490,7 @@ async function renderTeamProgressList(allUsers) {
             selectElement.dispatchEvent(new Event('change'));
             
             // 點擊後要顯示原本單一業務進度表的 grid header
-            const defaultGridHeader = document.querySelector('#agent-progress-content > .bg-white > .md\\:grid');
+            const defaultGridHeader = document.querySelector('#agent-progress-content .md\\:grid');
             if (defaultGridHeader) {
                 defaultGridHeader.classList.remove('hidden');
             }
@@ -3977,15 +4001,15 @@ function handleProgressLogic(sectionId) {
    const progressArea = document.getElementById('progress-display-area');
     const mainContentArea = document.querySelector('main');
     
-    // 【Bug 1 & 3 修正點 1/3】：取得單一業務模式的 Grid Header
-    const defaultGridHeader = document.querySelector('#agent-progress-content > .bg-white > .md\\:grid');
+    // 【Bug 1 修正點】：使用更寬鬆的選擇器，找到 #agent-progress-content 下的 Grid 標題
+    const defaultGridHeader = document.querySelector('#agent-progress-content .md\\:grid'); 
 
    if (sectionId !== 'chapter0') {
         if (progressArea) {
             progressArea.classList.remove('always-fixed-progress', 'shadow-xl');
         }
         
-        // 確保離開進度表時，要重新顯示單一業務模式的 Grid Header（避免點擊其他章節後再返回進度表時消失）
+        // 確保離開進度表時，要重新顯示單一業務模式的 Grid Header
         if (defaultGridHeader) {
             defaultGridHeader.classList.remove('hidden');
         }
@@ -3994,13 +4018,12 @@ function handleProgressLogic(sectionId) {
         return;
     }
     
-    // 【Bug 1 修正點 2/3】：進到進度表，先處理 Grid Header 狀態
     
     // 【核心修改 F】：判斷是否為總覽模式
     if ((loggedInRole === 'manager' || loggedInRole === 'director') && currentViewingUser === 'ALL_TEAM_PROGRESS') {
         // 如果是總覽模式
          if (defaultGridHeader) {
-            defaultGridHeader.classList.add('hidden'); // **徹底隱藏單一業務模式的標題**
+            defaultGridHeader.classList.add('hidden'); // **Bug 1 修正：隱藏單一業務模式的標題**
         }
          fetchTeamMembers(loggedInTeam); // 重新獲取用戶清單並渲染總覽表
          const currentTeam = loggedInRole === 'director' ? sessionStorage.getItem('currentSelectedTeam') : loggedInTeam;
@@ -4406,6 +4429,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
