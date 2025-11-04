@@ -11,65 +11,66 @@
         "password": "19851010",
         "name": "李志仁",
         "role": "agent",
-        "team": "A組"
+        "team": "忠孝業二"
     },
     {
         "username": "C80624",
         "password": "19930109",
         "name": "葉欣宜",
         "role": "agent",
-        "team": "A組"
+        "team": "忠孝業二"
     },
     {
         "username": "C91517",
         "password": "20010721",
         "name": "劉懷懋",
         "role": "agent",
-        "team": "A組"
+        "team": "忠孝業二"
     },
     {
         "username": "C87976",
         "password": "19980216",
         "name": "林俊翔",
         "role": "agent",
-        "team": "A組"
+        "team": "忠孝業二"
     },
     {
         "username": "shinelee",
         "password": "shinelee",
         "name": "李正翔",
         "role": "manager",
-        "team": "B組"
+        "team": "訪客"
     },
     {
         "username": "guest",
         "password": "guest",
         "name": "訪客",
         "role": "agent",
-        "team": "B組"
+        "team": "訪客"
     },
     {
         "username": "manager",
         "password": "manager",
         "name": "主管範例",
         "role": "manager",
-        "team": "C組"
+        "team": "店頭部門"
     },
      {
         "username": "ABC",
         "password": "ABC",
         "name": "業務範例1",
         "role": "agent",
-        "team": "C組"
+        "team": "店頭部門"
     },
     {
         "username": "EFG",
         "password": "EFG",
         "name": "業務範例2",
         "role": "agent",
-        "team": "C組"
+        "team": "店頭部門"
     }
 ]
+
 
 
 
