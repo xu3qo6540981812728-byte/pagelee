@@ -3279,72 +3279,130 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
 /**
- * 函數：從後端 API 獲取組員列表，並填充下拉選單
+* 函數：從後端 API 獲取組員列表，並填充下拉選單
  * @param {string} managerTeam - 當前登入主管所屬的組別
  */
 async function fetchTeamMembers(managerTeam) {
     const loggedInUser = sessionStorage.getItem('loggedInUser');
-    const loggedInRole = sessionStorage.getItem('loggedInRole'); // 新增：取得角色
+    const loggedInRole = sessionStorage.getItem('loggedInRole');
+    const managerControlPanel = document.getElementById('manager-control-panel'); // 定義在頂層，確保能找到
+    
+    // 函數：重新渲染成員清單
+    const populateMembers = (teamToDisplay, allUsers, currentTarget) => {
+        const teamMembers = allUsers.filter(
+            user => user.team === teamToDisplay && user.role === 'agent'
+        );
+        const selectElement = document.getElementById('team-member-select');
+        const loggedInName = sessionStorage.getItem('loggedInName');
+        
+        // 清空並加入預設選項：主管/總監自己的進度
+        selectElement.innerHTML = `<option value="${loggedInUser}" ${loggedInUser === currentTarget ? 'selected' : ''}>個人進度 (${loggedInName})</option>`;
 
+        // 填充組員選項
+        teamMembers.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.username;
+            option.textContent = `${member.name} (${member.username}) - ${member.team}`;
+            
+            // 讓上一次選擇的成員保持選中
+            if (member.username === currentTarget) {
+                 option.selected = true;
+            }
+            selectElement.appendChild(option);
+        });
+        
+        // 確保目前查看的名字是正確的
+        const selectedUser = allUsers.find(u => u.username === currentTarget);
+        document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : loggedInName;
+    };
+    
     try {
         const response = await fetch('/.netlify/functions/get_users');
         const data = await response.json();
         
-        if (data.success) {
-            
-            let teamMembers = [];
-            const allUsers = data.users;
-
-            // 核心邏輯修改：根據角色決定篩選範圍
-            if (loggedInRole === 'director') {
-                // 總監角色：篩選出所有 'agent' 角色
-                teamMembers = allUsers.filter(user => user.role === 'agent');
-            } else {
-                // 一般主管角色 ('manager')：只篩選出同組且為 'agent' 角色
-                teamMembers = allUsers.filter(
-                    user => user.team === managerTeam && user.role === 'agent'
-                );
+        if (!data.success) {
+            console.error('API回傳失敗:', data.message);
+            if (managerControlPanel) {
+                 managerControlPanel.innerHTML = `<p class="text-red-500 p-4">無法載入組員列表，請檢查連線或後台配置。</p>`;
             }
-
-            const selectElement = document.getElementById('team-member-select');
-            const loggedInName = sessionStorage.getItem('loggedInName');
-            
-            // 1. 預設選項：主管自己的進度
-            selectElement.innerHTML = `<option value="${loggedInUser}" selected>個人進度 (${loggedInName})</option>`;
-
-            // 2. 填充組員選項
-            teamMembers.forEach(member => {
-                const option = document.createElement('option');
-                // 顯示組別 (僅總監模式下才真正有用)
-                const displayText = (loggedInRole === 'director') 
-                    ? `${member.name} (${member.username}) - ${member.team}` 
-                    : `${member.name} (${member.username})`;
-                    
-                option.value = member.username;
-                option.textContent = displayText;
-                selectElement.appendChild(option);
-            });
-            
-            // 3. 監聽選單切換事件 (保持不變)
-            selectElement.addEventListener('change', (e) => {
-                const selectedUsername = e.target.value;
-                const selectedUser = allUsers.find(u => u.username === selectedUsername);
-
-                currentViewingUser = selectedUsername;
-                
-                currentProgressName.textContent = selectedUser ? selectedUser.name : '個人進度';
-                
-                loadProgressFromFirebase();
-            }, { once: true }); // 使用 { once: true } 確保只註冊一次事件
-
-        } else {
-             console.error('API回傳失敗:', data.message);
+            return;
         }
+
+        const allUsers = data.users;
+        
+        if (loggedInRole === 'director') {
+            const uniqueTeams = [...new Set(allUsers.map(user => user.team))].filter(t => t);
+            
+            // 找出當前選擇的組別或預設組別 (如果沒有選擇，預設為A組或第一個)
+            const currentSelectedTeam = sessionStorage.getItem('currentSelectedTeam') || 'A組';
+            let targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
+            
+            // 創建總監介面
+            managerControlPanel.innerHTML = `
+                <h5 class="font-bold text-indigo-700 mb-2">總監控制面板 (可切換組別)</h5>
+                <div id="team-and-member-controls" class="flex flex-col sm:flex-row gap-3">
+                    <select id="team-filter-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                        ${uniqueTeams.map(team => `<option value="${team}" ${team === targetTeam ? 'selected' : ''}>${team} 進度</option>`).join('')}
+                    </select>
+                    <select id="team-member-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                    </select>
+                </div>
+                <div id="current-user-info" class="w-full mt-3 p-2 bg-indigo-100 rounded-lg text-sm text-indigo-700 flex items-center justify-center">
+                    目前查看：<span id="current-progress-name" class="font-bold ml-1">個人進度</span>
+                </div>
+            `;
+            
+            // 初始填充成員清單
+            populateMembers(targetTeam, allUsers, currentViewingUser);
+            
+            // 監聽組別切換事件
+            const teamFilterSelect = document.getElementById('team-filter-select');
+            teamFilterSelect.addEventListener('change', (e) => {
+                const newTeam = e.target.value;
+                sessionStorage.setItem('currentSelectedTeam', newTeam); // 儲存當前組別
+                
+                // 切換組別時，預設查看總監自己的進度
+                currentViewingUser = loggedInUser; 
+                
+                populateMembers(newTeam, allUsers, loggedInUser); 
+                
+                // 必須重新載入進度
+                loadProgressFromFirebase();
+            });
+        } else {
+             // 主管模式：保持不變，只顯示自己組別的成員
+             populateMembers(managerTeam, allUsers, currentViewingUser);
+        }
+
+        // 監聽成員選擇事件 (不論主管或總監) - **這部分很重要，要確保只註冊一次**
+        const memberSelectElement = document.getElementById('team-member-select');
+        
+        // 先移除可能存在的舊監聽器 (防止重複註冊導致多次載入)
+        if(memberSelectElement._listener) {
+             memberSelectElement.removeEventListener('change', memberSelectElement._listener);
+        }
+        
+        const memberChangeListener = (e) => {
+            const selectedUsername = e.target.value;
+            const selectedUser = allUsers.find(u => u.username === selectedUsername);
+
+            currentViewingUser = selectedUsername; // <--- 修正點：更新當前查看對象
+            
+            document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : sessionStorage.getItem('loggedInName');
+            
+            // 必須重新載入進度
+            loadProgressFromFirebase();
+        };
+
+        memberSelectElement.addEventListener('change', memberChangeListener);
+        memberSelectElement._listener = memberChangeListener; // 儲存監聽器引用
+        
+        // 確保在函數結束時，進度表是載入狀態
+        loadProgressFromFirebase();
     } catch (error) {
         console.error('Failed to fetch team members:', error);
-        const managerPanel = document.getElementById('manager-control-panel');
-        if (managerPanel) {
-            managerPanel.innerHTML = `<p class="text-red-500 p-4">無法載入組員列表，請檢查連線或後台配置。</p>`;
+        if (managerControlPanel) {
+            managerControlPanel.innerHTML = `<p class="text-red-500 p-4">無法載入組員列表，請檢查連線或後台配置。</p>`;
         }
     }
 }
@@ -4164,6 +4222,7 @@ function handleProgressLogic(sectionId) {
         const loggedInName = sessionStorage.getItem('loggedInName');
         const progressHeader = document.getElementById('progress-percentage');
         if (progressHeader) {
+            // 這裡不再顯示 0%，因為 loadProgressFromFirebase 會更新
             progressHeader.innerHTML = `總體進度：0% <span class="text-sm font-normal text-indigo-700 ml-2">(${loggedInName} 的進度)</span>`;
         }
     }
@@ -4277,6 +4336,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
