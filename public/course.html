@@ -350,6 +350,34 @@
         transform: translate(-2px, -2px);
         box-shadow: 6px 6px 0 #000000;
     }
+        .vertical-text {
+    /* 讓文字直立，從右到左排列 */
+    writing-mode: vertical-rl; 
+    /* 旋轉文字，確保閱讀方向 */
+    transform: rotate(180deg);
+    /* 調整寬度，讓文字有空間伸展 */
+    width: 30px; 
+    /* 確保文字不會折行 */
+    white-space: nowrap; 
+    /* 讓單元格內文字置中 */
+    text-align: center;
+    vertical-align: top;
+    padding-top: 5px; /* 頂部間距 */
+    padding-bottom: 5px; /* 底部間距 */
+    height: 150px; /* 給予足夠的高度，避免文字超出 */
+}
+
+/* 確保內容單元格對齊 */
+#team-progress-list-body td {
+    height: 150px; /* 保持與標題行一樣的高度 */
+    vertical-align: top;
+    padding-top: 5px;
+}
+
+/* 調整總覽表表頭的文字大小 */
+.vertical-text {
+    font-size: 0.8rem;
+}
    </style>
     
 </head>
@@ -483,20 +511,19 @@
             </div>
         </div>
     </div>
-    <div id="agent-progress-content"> 
-        <div class="bg-white p-4 sm:p-8 rounded-xl shadow-lg content-card animate-on-scroll">
-           <div class="hidden md:grid md:grid-cols-[0.8fr_80px_240px_1.2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
-    <div class="font-semibold text-slate-600">項目</div>
-    <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
-    <div class="font-semibold text-slate-600 text-center">進度日期 / 備註</div>
-    <div class="font-semibold text-slate-600">次數紀錄</div>
-</div>
-            
-            <div id="progress-table" class="border-x border-b border-slate-200 rounded-b-lg">
-                </div>
-            
-        </div>
+   <div id="agent-progress-content"> 
+    <div class="bg-white p-4 sm:p-8 rounded-xl shadow-lg content-card animate-on-scroll">
+       <div id="single-agent-table-header" class="hidden md:grid md:grid-cols-[0.8fr_80px_240px_1.2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
+            <div class="font-semibold text-slate-600">項目</div>
+            <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
+            <div class="font-semibold text-slate-600 text-center">進度日期 / 備註</div>
+            <div class="font-semibold text-slate-600">次數紀錄</div>
+       </div>
+
+        <div id="progress-table" class="border-x border-b border-slate-200 rounded-b-lg">
+            </div>
     </div>
+</div>
     </div>
         <div id="chapter1" class="content-section space-y-8">
             <header class=" ">
@@ -3344,9 +3371,15 @@ async function fetchTeamMembers(managerTeam) {
 async function renderTeamProgressList(allUsers) {
     // 總結進度項目的名稱，用於表頭
     const progressItemNames = progressItems
-        .filter(item => item.type !== 'header')
-        .map(item => item.name.substring(0, 4)); // 取前 4 個字作為簡稱
-
+    .filter(item => item.type !== 'header')
+    .map(item => item.name); // 完整名稱
+const singleHeader = document.getElementById('single-agent-table-header');
+    
+    // 確保在總覽模式下，這個表頭是「隱藏」的
+    if (singleHeader) {
+        // 添加 'hidden' class，使其隱藏
+        singleHeader.classList.add('hidden');
+    }
     // 過濾出當前主管/總監權限下應看的業務清單
     const isDirector = loggedInRole === 'director';
     const currentTeam = isDirector ? sessionStorage.getItem('currentSelectedTeam') : loggedInTeam;
@@ -3372,17 +3405,16 @@ async function renderTeamProgressList(allUsers) {
     
     // 創建總覽表的內容
     let htmlContent = `
-        <div class="overflow-x-auto">
-            <table class="min-w-full bg-white border border-slate-200">
-                <thead class="bg-indigo-600 text-white">
-                    <tr>
-                        <th class="p-3 text-left font-bold w-32 sticky left-0 bg-indigo-600">業務員 (點擊可修改)</th>
-                        ${progressItemNames.map(name => `<th class="p-3 text-center font-bold">${name}</th>`).join('')}
-                        <th class="p-3 text-center font-bold">總進度</th>
-                    </tr>
-                </thead>
-                <tbody id="team-progress-list-body">
-    `;
+    // ...
+        <thead class="bg-indigo-600 text-white">
+            <tr>
+                <th class="p-3 text-left font-bold w-32 sticky left-0 bg-indigo-600">業務員 (點擊可修改)</th>
+                ${progressItemNames.map(name => `<th class="p-3 text-center font-bold vertical-text">${name}</th>`).join('')}
+                <th class="p-3 text-center font-bold vertical-text">總進度</th>
+            </tr>
+        </thead>
+    // ...
+`;
     
     targetUsers.forEach(user => {
         const userProgress = allProgressData[user.username] || {};
@@ -3979,6 +4011,13 @@ function handleProgressLogic(sectionId) {
     function renderProgressTable() {
         if (!progressTableBody) return; 
         progressTableBody.innerHTML = '';
+        const singleHeader = document.getElementById('single-agent-table-header');
+    
+    // 確保在單一業務員模式下，這個表頭是「顯示」的
+    if (singleHeader) {
+        // 移除 'hidden' class，使其顯示 (如果它曾被 renderTeamProgressList 隱藏)
+        singleHeader.classList.remove('hidden');
+    }
         const isAgent = loggedInRole === 'agent';
         const disabledAttr = isAgent ? 'disabled' : '';
         progressItems.forEach((item, index) => {
@@ -4365,6 +4404,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
