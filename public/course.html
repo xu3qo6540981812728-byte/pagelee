@@ -4011,8 +4011,8 @@ function handleProgressLogic(sectionId) {
                 return;
             }
             // ... (其餘單一業務渲染邏輯保持不變)
-            const isChecked = progressData[index]?.checked || false;
-            const completionDate = progressData[index]?.completionDate || '';
+            const isChecked = (progressData[index] && progressData[index].checked) || false;
+const completionDate = (progressData[index] && progressData[index].completionDate) || '';
             const itemWrapper = document.createElement('div');
             itemWrapper.className = 'progress-item grid grid-cols-1 md:grid-cols-[0.8fr_80px_240px_1.2fr] gap-x-4 border-t border-slate-200 px-4 py-4 hover:bg-slate-50';
             let countInputsHTML = '';
@@ -4026,7 +4026,7 @@ function handleProgressLogic(sectionId) {
             }
             
             // 【重要修正】：單一業務模式下的備註欄位應該只有主管/總監能填寫 (業務員禁用)
-             const remarkValue = progressData[index]?.remark || '';
+             const remarkValue = (progressData[index] && progressData[index].remark) || '';
             const remarkDisabledAttr = (loggedInRole === 'manager' || loggedInRole === 'director') ? '' : 'disabled';
 
 
@@ -4393,6 +4393,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
