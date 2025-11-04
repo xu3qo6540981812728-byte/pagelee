@@ -3284,19 +3284,28 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function fetchTeamMembers(managerTeam) {
     const loggedInUser = sessionStorage.getItem('loggedInUser');
+    const loggedInRole = sessionStorage.getItem('loggedInRole'); // 新增：取得角色
+
     try {
-        // 呼叫新的 Netlify Function
         const response = await fetch('/.netlify/functions/get_users');
         const data = await response.json();
         
         if (data.success) {
-            // 篩選出同組且為 agent 角色（組員）的成員
-            const teamMembers = data.users.filter(
-                user => user.team === managerTeam && user.role === 'agent'
-            );
-
-            const allUsers = data.users; // 取得所有使用者，包含主管，用於查找名字
             
+            let teamMembers = [];
+            const allUsers = data.users;
+
+            // 核心邏輯修改：根據角色決定篩選範圍
+            if (loggedInRole === 'director') {
+                // 總監角色：篩選出所有 'agent' 角色
+                teamMembers = allUsers.filter(user => user.role === 'agent');
+            } else {
+                // 一般主管角色 ('manager')：只篩選出同組且為 'agent' 角色
+                teamMembers = allUsers.filter(
+                    user => user.team === managerTeam && user.role === 'agent'
+                );
+            }
+
             const selectElement = document.getElementById('team-member-select');
             const loggedInName = sessionStorage.getItem('loggedInName');
             
@@ -3306,24 +3315,27 @@ async function fetchTeamMembers(managerTeam) {
             // 2. 填充組員選項
             teamMembers.forEach(member => {
                 const option = document.createElement('option');
+                // 顯示組別 (僅總監模式下才真正有用)
+                const displayText = (loggedInRole === 'director') 
+                    ? `${member.name} (${member.username}) - ${member.team}` 
+                    : `${member.name} (${member.username})`;
+                    
                 option.value = member.username;
-                option.textContent = `${member.name} (${member.username})`;
+                option.textContent = displayText;
                 selectElement.appendChild(option);
             });
             
-            // 3. 監聽選單切換事件 (從這裡搬過來，避免重複註冊)
+            // 3. 監聽選單切換事件 (保持不變)
             selectElement.addEventListener('change', (e) => {
                 const selectedUsername = e.target.value;
                 const selectedUser = allUsers.find(u => u.username === selectedUsername);
 
                 currentViewingUser = selectedUsername;
                 
-                // 由於這裡無法從 Firebase 取得 name，因此從 allUsers 找到名字
                 currentProgressName.textContent = selectedUser ? selectedUser.name : '個人進度';
                 
-                // 重新載入並渲染進度
                 loadProgressFromFirebase();
-            });
+            }, { once: true }); // 使用 { once: true } 確保只註冊一次事件
 
         } else {
              console.error('API回傳失敗:', data.message);
@@ -4141,10 +4153,10 @@ function handleProgressLogic(sectionId) {
     const teamMemberSelect = document.getElementById('team-member-select');
     const currentProgressName = document.getElementById('current-progress-name');
 
-    if (loggedInRole === 'manager') {
+   if (loggedInRole === 'manager' || loggedInRole === 'director') { 
         managerControlPanel.classList.remove('hidden');
         
-        // 核心修改點：動態獲取並填充組員列表（已在上方新增 fetchTeamMembers 函數）
+        // 核心修改點：動態獲取並填充組員列表
         fetchTeamMembers(loggedInTeam); 
 
     } else {
@@ -4265,6 +4277,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
