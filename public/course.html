@@ -466,13 +466,13 @@
         </div>
     <!-- Chapter Content Template -->
     <template id="chapter-content-template">
-        <div id="chapter0" class="content-section space-y-8">
+       <div id="chapter0" class="content-section space-y-8">
     
-    <div class="relative flex justify-between items-center mb-8">
+    <div id="progress-header-area" class="relative flex justify-between items-center mb-8">
         
         <header class="animate-on-scroll flex-1">
             <h2 id="progress-table-title" class="text-4xl font-bold text-slate-800 border-b-4 border-indigo-500 pb-3 mb-2">菁英課程進度表</h2>
-            <p class="text-slate-500">追蹤並記錄你的學習與實戰進度</p>
+            <p id="progress-subtitle" class="text-slate-500">追蹤並記錄你的學習與實戰進度</p>
         </header>
 
         <div id="certification-stamp-area" class="w-32 h-32 md:w-48 md:h-48 flex-shrink-0 ml-4 relative">
@@ -485,14 +485,12 @@
     </div> 
     <div id="progress-display-area" class="mb-6 p-4 bg-indigo-50 rounded-lg sticky top-0 z-10">
         <h4 id="progress-percentage" class="text-xl font-bold text-indigo-800 mb-2">
-            總體進度：0%
-        </h4>
+            </h4>
         <div class="w-full bg-slate-200 rounded-full h-2.5">
             <div id="progress-bar-visual" class="bg-indigo-600 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
         </div>
        <p id="progress-motivation" class="text-base mt-3">
-            繼續加油，朝菁英之路邁進！
-        </p>
+            </p>
 
         <div id="manager-control-panel" class="mt-4 pt-4 border-t border-indigo-200 hidden">
             <h5 class="font-bold text-indigo-700 mb-2">主管控制面板</h5>
@@ -505,16 +503,18 @@
             </div>
         </div>
     </div>
-    <div class="bg-white p-4 sm:p-8 rounded-xl shadow-lg content-card animate-on-scroll">
-        <div class="hidden md:grid md:grid-cols-[1fr_100px_120px_2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
-            <div class="font-semibold text-slate-600">項目</div>
-            <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
-            <div class="font-semibold text-slate-600 text-center">完成日期</div> <div class="font-semibold text-slate-600">次數紀錄</div>
-        </div>
-        
-        <div id="progress-table" class="border-x border-b border-slate-200 rounded-b-lg">
+    <div id="agent-progress-content"> 
+        <div class="bg-white p-4 sm:p-8 rounded-xl shadow-lg content-card animate-on-scroll">
+            <div class="hidden md:grid md:grid-cols-[1fr_100px_120px_2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
+                <div class="font-semibold text-slate-600">項目</div>
+                <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
+                <div class="font-semibold text-slate-600 text-center">完成日期</div> <div class="font-semibold text-slate-600">次數紀錄</div>
             </div>
-        
+            
+            <div id="progress-table" class="border-x border-b border-slate-200 rounded-b-lg">
+                </div>
+            
+        </div>
     </div>
     </div>
         <div id="chapter1" class="content-section space-y-8">
@@ -3490,12 +3490,17 @@ function resetAudioPlayerUI() {
         const loggedInName = sessionStorage.getItem('loggedInName');
         const loggedInRole = sessionStorage.getItem('loggedInRole');
         const titleElement = document.getElementById('progress-table-title');
+        const subtitleElement = document.getElementById('progress-subtitle');
         
         if (titleElement && loggedInName) {
-            if (loggedInRole === 'manager' || loggedInRole === 'director') { // 【修正點 4】：主管/總監模式
-                 titleElement.innerHTML = `組員進度追蹤表`; // 顯示中性標題
+            if (loggedInRole === 'manager' || loggedInRole === 'director') {
+                 // 【修正點 3】：主管/總監模式
+                 titleElement.textContent = `組員進度追蹤表`; // 顯示中性標題
+                 subtitleElement.textContent = `請從上方控制面板選擇業務員查看進度`;
             } else {
+                 // 業務員模式
                  titleElement.innerHTML = `<span class="text-amber-500 font-extrabold">${loggedInName}</span><br>菁英課程進度表`;
+                 subtitleElement.textContent = `追蹤並記錄你的學習與實戰進度`;
             }
         }
     }
@@ -3521,18 +3526,15 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     const loggedInTeam = sessionStorage.getItem('loggedInTeam');
     let currentViewingUser = loggedInUser; // 當前查看進度的用戶，預設為自己
     function loadProgressFromFirebase() {
-        if (currentViewingUser === 'PROMPT_SELECT') { // 【修正點 3】：處理提示狀態
+        
+        // 【修正點 4】：如果處於提示狀態，則清空數據並顯示提示
+        if (currentViewingUser === 'PROMPT_SELECT') { 
              progressData = {};
              if (document.getElementById('chapter0').classList.contains('active')) {
                  renderProgressTable();
                  updateProgressDisplay();
              }
-             // 額外顯示提示訊息
-             const motivationText = document.getElementById('progress-motivation');
-             if (motivationText) {
-                 motivationText.innerHTML = `<span class="text-lg font-extrabold text-red-600 animate-pulse">請從上方下拉選單中選擇一位業務員。</span>`;
-             }
-             return;
+             return; // 這裡直接返回，不進行 Firebase 查詢
         }
 
         if (!currentViewingUser || typeof db === 'undefined') {
@@ -3835,13 +3837,26 @@ const motivationMessages = [
 ];
 
 function updateProgressDisplay() {
+    const isManagerOrDirector = loggedInRole === 'manager' || loggedInRole === 'director';
+    
+    // 【修正點 2.1】：如果處於提示狀態，則只顯示提示訊息並返回
+    if (currentViewingUser === 'PROMPT_SELECT' && isManagerOrDirector) {
+        document.getElementById('progress-percentage').textContent = `成員進度`;
+        document.getElementById('progress-bar-visual').style.width = `0%`;
+        document.getElementById('progress-motivation').innerHTML = `<span class="text-lg font-extrabold text-red-600 animate-pulse">請從上方下拉選單中選擇一位業務員。</span>`;
+        document.getElementById('agent-progress-content').classList.add('hidden'); // 隱藏進度表內容
+        return;
+    }
+    
+    document.getElementById('agent-progress-content').classList.remove('hidden'); // 顯示進度表內容
+
     // 過濾掉所有標題 (header)，只計算實際的進度項目
     const progressItemsToCount = progressItems.filter(item => item.type !== 'header');
     const progressItemsCount = progressItemsToCount.length;
     let completedCount = 0;
 
     progressItemsToCount.forEach((item) => {
-        // 找到這個項目在原始陣列中的索引，以便查找進度數據
+        // ... (保持原有的進度計算邏輯不變)
         const index = progressItems.findIndex(i => i.name === item.name);
         const itemData = progressData[index];
         
@@ -3849,25 +3864,21 @@ function updateProgressDisplay() {
 
         // 檢查是否有計數項目
         if (item.counts && item.counts.length > 0) {
-            // 這是「觀摩」或「陪同自行作業」類的項目
             const hasCounts = item.counts.length > 0;
-            let isCountCompleted = true; // 假設所有子項目都完成
+            let isCountCompleted = true;
             
             if (hasCounts) {
                 isCountCompleted = item.counts.every(countName => {
-                    // 只要計數欄位有任何非空值（即有記次），即視為該子項目已完成
                     const value = itemData?.counts?.[countName] || '';
-                    return value.trim() !== ''; // 判斷是否有記錄 (非空)
+                    return value.trim() !== '';
                 });
             }
 
-            // 只有當所有子項目都有記錄時，這個母項目才算完成
             if (isCountCompleted) {
                  isCompleted = true;
             }
             
         } else {
-            // 這是單純的勾選框項目
             isCompleted = itemData?.checked || false;
         }
 
@@ -3879,15 +3890,14 @@ function updateProgressDisplay() {
     const percentage = progressItemsCount > 0 ? Math.round((completedCount / progressItemsCount) * 100) : 0;
     const modal = document.getElementById('elite-certification-modal');
 
-const stampImage = document.getElementById('stamp-image-placeholder');
+    const stampImage = document.getElementById('stamp-image-placeholder');
     const stampPlaceholder = document.getElementById('stamp-placeholder-border');
     
     if (percentage === 100) {
-        // 進度達成 100%
+        // ... (保持原有的 100% 達成邏輯不變)
         if (modal) {
             modal.style.display = 'flex';
         }
-        // 額外可以加上提醒：
         const motivationText = document.getElementById('progress-motivation');
         if (motivationText) {
              motivationText.innerHTML = `<span class="text-xl font-extrabold text-red-600 animate-bounce">菁英認證達成！請點擊下方的「我知道了」按鈕！</span>`;
@@ -3895,7 +3905,6 @@ const stampImage = document.getElementById('stamp-image-placeholder');
         if (stampImage) stampImage.classList.add('opacity-100');
         if (stampPlaceholder) stampPlaceholder.classList.add('hidden');
     } else {
-         // 非 100% 達成時，確保彈窗是隱藏的
          if (modal) {
             modal.style.display = 'none';
         }
@@ -3913,22 +3922,25 @@ const stampImage = document.getElementById('stamp-image-placeholder');
 
     
     if (motivationText) {
-        let fullMessage = motivationMessages.find(m => percentage >= m.percent)?.message || motivationMessages[motivationMessages.length - 1].message;
-        
-        // 使用冒號「:」將稱號和說明文字分開
-        const parts = fullMessage.split(':');
-        const title = parts[0].trim(); // 取得稱號
-        const description = parts.length > 1 ? parts.slice(1).join(':').trim() : ''; // 取得說明文字
+        // 【修正點 2.2】：僅在業務員模式下顯示稱號
+        if (loggedInRole === 'agent') {
+            let fullMessage = motivationMessages.find(m => percentage >= m.percent)?.message || motivationMessages[motivationMessages.length - 1].message;
+            
+            const parts = fullMessage.split(':');
+            const title = parts[0].trim();
+            const description = parts.length > 1 ? parts.slice(1).join(':').trim() : '';
 
-        // 應用：放大 (text-lg)、極粗 (font-extrabold)、高級紫 (text-purple-700)、微閃爍 (animate-pulse)
-        const styledTitle = `<span class="text-lg font-extrabold text-purple-700 animate-pulse">${title}</span>`;
-        
-        // 組合成最終 HTML：只對說明文字使用基礎樣式
-        const finalHTML = description 
-            ? `${styledTitle}: <span class="text-sm text-indigo-600">${description}</span>` 
-            : styledTitle;
+            const styledTitle = `<span class="text-lg font-extrabold text-purple-700 animate-pulse">${title}</span>`;
+            
+            const finalHTML = description 
+                ? `${styledTitle}: <span class="text-sm text-indigo-600">${description}</span>` 
+                : styledTitle;
 
-        motivationText.innerHTML = finalHTML;
+            motivationText.innerHTML = finalHTML;
+        } else {
+            // 主管/總監模式下，顯示普通進度訊息
+            motivationText.innerHTML = `當前查看：<span class="font-bold">${document.getElementById('current-progress-name').textContent}</span> 的學習進度`;
+        }
     }
 }
 function handleProgressLogic(sectionId) {
@@ -4358,6 +4370,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
