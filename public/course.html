@@ -3350,8 +3350,12 @@ function renderTeamProgressList(agents) {
             const itemIndex = progressItems.findIndex(i => i.name === item.name);
             const itemData = agentProgress[itemIndex] || {};
             
-            const isCheckedByManager = itemData?.checked || false; 
-            const allCountsFilled = item.counts?.every(countName => (itemData?.counts?.[countName] || '').trim() !== '') || true;
+            const isCheckedByManager = itemData.checked || false; 
+            
+            // **【修正點】**：移除 Optional Chaining (?) 以避免舊環境的語法錯誤
+            const allCountsFilled = (item.counts && item.counts.length > 0) 
+                ? item.counts.every(countName => (itemData.counts && itemData.counts[countName] || '').trim() !== '') 
+                : true;
 
             const isCompleted = isCheckedByManager && allCountsFilled;
             if (isCompleted) {
@@ -3366,7 +3370,7 @@ function renderTeamProgressList(agents) {
         });
 
         const percentage = totalProgressItems > 0 ? Math.round((completedCount / totalProgressItems) * 100) : 0;
-        const latestRemark = agentProgress[progressItems.length - 1]?.remark || ''; // 假設最後一項或某一項有總結備註
+        const latestRemark = agentProgress[progressItems.length - 1]?.remark || ''; // 保留最後一項的 Optional Chaining 作為範例，如果此處也報錯，則替換為: const latestRemark = agentProgress[progressItems.length - 1] ? (agentProgress[progressItems.length - 1].remark || '') : '';
 
         const listItem = document.createElement('div');
         listItem.className = 'agent-list-item grid grid-cols-[1fr_80px_1fr] md:grid-cols-[1fr_120px_1fr] gap-4 border-t border-slate-200 px-4 py-4 hover:bg-indigo-50 cursor-pointer transition';
@@ -4387,6 +4391,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
