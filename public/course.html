@@ -505,11 +505,11 @@
     </div>
     <div id="agent-progress-content"> 
         <div class="bg-white p-4 sm:p-8 rounded-xl shadow-lg content-card animate-on-scroll">
-            <div class="hidden md:grid md:grid-cols-[1fr_100px_120px_2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
-                <div class="font-semibold text-slate-600">項目</div>
-                <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
-                <div class="font-semibold text-slate-600 text-center">完成日期</div> <div class="font-semibold text-slate-600">次數紀錄</div>
-            </div>
+           <div class="hidden md:grid md:grid-cols-[1fr_100px_120px_2fr] gap-4 px-4 py-3 bg-slate-100 rounded-t-lg">
+    <div class="font-semibold text-slate-600">項目</div>
+    <div class="font-semibold text-slate-600 text-center">完成狀態<br>(主管審核)</div>
+    <div class="font-semibold text-slate-600 text-center">進度日期 / 備註</div> <div class="font-semibold text-slate-600">次數紀錄</div>
+</div>
             
             <div id="progress-table" class="border-x border-b border-slate-200 rounded-b-lg">
                 </div>
@@ -3987,14 +3987,7 @@ function handleProgressLogic(sectionId) {
                 }).join('');
                 countInputsHTML = `<div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 md:mt-0">${inputs}</div>`;
             }
-            const dateInputHTML = `
-                <div class="flex items-center justify-start md:justify-center mt-2 md:mt-0">
-                    <label class="flex items-center space-x-2 md:space-x-0 cursor-pointer">
-                        <span class="md:hidden text-slate-500">完成日期:</span>
-                        <input type="date" value="${completionDate}" ${disabledAttr} data-index="${index}" class="date-input w-full text-center border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm">
-                    </label>
-                </div>
-            `;
+            
             itemWrapper.innerHTML = ` 
                 <div class="flex items-center text-slate-700 font-medium"> 
                     ${item.name} 
@@ -4004,7 +3997,11 @@ function handleProgressLogic(sectionId) {
                         <span class="md:hidden text-slate-500">完成狀態(主管審核):</span> 
                         <input type="checkbox" data-index="${index}" class="h-6 w-6 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500 ${disabledAttr}" ${isChecked ? 'checked' : ''} ${disabledAttr}> </label> 
                 </div> 
-                ${dateInputHTML} <div class="mt-2 md:mt-0"> 
+                <div class="flex flex-col space-y-1 mt-2 md:mt-0">
+                    <div class="text-xs text-slate-500 text-center md:text-sm md:text-slate-700 font-semibold">${completionDate ? `進度日期: ${completionDate}` : '未記錄日期'}</div>
+                    <input type="text" value="${progressData[index]?.remark || ''}" ${disabledAttr} data-index="${index}" class="remark-input w-full text-center border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition text-sm" placeholder="${isAgent ? '主管備註 (僅主管可填寫)' : '輸入備註'}">
+                </div>
+                <div class="mt-2 md:mt-0"> 
                     ${countInputsHTML ? `<div class="md:hidden text-slate-500 mb-2">次數紀錄:</div>` : ''} 
                     ${countInputsHTML} 
                 </div> `;
@@ -4029,25 +4026,15 @@ function handleProgressLogic(sectionId) {
        
         const isCheckbox = e.target.type === 'checkbox';
         const isCountInput = e.target.classList.contains('count-input');
-        const isDateInput = e.target.classList.contains('date-input');
+        const isRemarkInput = e.target.classList.contains('remark-input'); // 【新增：備註欄位判斷】
         
-        if (isCheckbox || isCountInput || isDateInput) {
+        if (isCheckbox || isCountInput || isRemarkInput) { // 【修改：將 isDateInput 替換為 isRemarkInput】
             if (!progressData[index]) {
                 progressData[index] = {};
             }
             if (isCheckbox) {
                 progressData[index].checked = e.target.checked;
-                const dateInput = e.target.closest('.progress-item').querySelector('.date-input');
-                    if (dateInput) {
-                        if (e.target.checked) {
-                            const today = new Date().toISOString().split('T')[0];
-                            dateInput.value = today;
-                            progressData[index].completionDate = today;
-                        } else {
-                            dateInput.value = '';
-                            progressData[index].completionDate = '';
-                        }
-                    }
+                // 【注意：這裡移除了舊的日期連動邏輯】
             } else if (isCountInput) {
                 const countName = e.target.dataset.countName;
                 if (!progressData[index].counts) {
@@ -4055,19 +4042,27 @@ function handleProgressLogic(sectionId) {
                 }
                 
                 progressData[index].counts[countName] = e.target.value; 
-                } else if (isDateInput) { // <-- 【新增：日期處理】
-                     progressData[index].completionDate = e.target.value;
-                     // 【新增：如果日期被填入，則自動勾選完成；如果被清空，則自動取消勾選】
-                     const checkbox = e.target.closest('.progress-item').querySelector('input[type="checkbox"]');
-                     if (checkbox) {
-                        const hasDate = e.target.value.trim() !== '';
-                        checkbox.checked = hasDate;
-                        progressData[index].checked = hasDate;
-                     }
+            } else if (isRemarkInput) { // 【新增：備註邏輯】
+                progressData[index].remark = e.target.value;
+                
+                // 【核心新功能】：只要備註有變動，就自動更新進度日期
+                const today = new Date().toISOString().split('T')[0];
+                progressData[index].completionDate = today;
+                
+                // 實時更新顯示的日期
+                const itemWrapper = e.target.closest('.progress-item');
+                const dateDisplay = itemWrapper.querySelector('.text-xs');
+                if (dateDisplay) {
+                    dateDisplay.textContent = `進度日期: ${today}`;
+                }
             }
             
             saveProgress();
             
+            // 如果是勾選框，需要重新渲染才能正確更新日期顯示
+            if (isCheckbox) {
+                renderProgressTable();
+            }
             
             updateProgressDisplay();
         }
@@ -4370,6 +4365,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
