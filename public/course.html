@@ -3338,19 +3338,15 @@ async function fetchTeamMembers(managerTeam) {
     }
 }
     /**
-* 函數：渲染團隊進度總覽表
+ * 函數：渲染團隊進度總覽表
  * @param {Array} allUsers - 所有用戶的清單 (包含 name, username, team)
  */
 async function renderTeamProgressList(allUsers) {
     // 總結進度項目的名稱，用於表頭
     const progressItemNames = progressItems
         .filter(item => item.type !== 'header')
-        // 【Bug 2 修正點】：使用完整名稱，並為垂直排列做準備
-        .map(item => item.name.split('').join('<br>')); 
-    
-    // 確保清空進度內容區
-    document.getElementById('progress-table').innerHTML = ''; 
-    
+        .map(item => item.name.substring(0, 4)); // 取前 4 個字作為簡稱
+
     // 過濾出當前主管/總監權限下應看的業務清單
     const isDirector = loggedInRole === 'director';
     const currentTeam = isDirector ? sessionStorage.getItem('currentSelectedTeam') : loggedInTeam;
@@ -3363,6 +3359,8 @@ async function renderTeamProgressList(allUsers) {
         targetUsers = allUsers.filter(user => user.role === 'agent');
     }
     
+    // 【Bug 1 修復點】：已移除此處重複添加下拉選單選項的程式碼。
+
     // 獲取所有業務的進度資料 (只讀取一次)
     const progressDocs = await db.collection("progressData").get();
     const allProgressData = {};
@@ -3370,36 +3368,17 @@ async function renderTeamProgressList(allUsers) {
         allProgressData[doc.id] = doc.data();
     });
 
-    const progressTableContainer = document.getElementById('progress-table');
-    
-    // 創建表頭 - 實現直立文字 (Writing Mode)
-    // 【Bug 2/3 修正點】：使用 writing-mode 實現直立，並將儲存格高度固定，寬度極度壓縮
-    const verticalHeaderStyle = `
-        style="
-            height: 120px; /* 確保有足夠高度容納文字 */
-            min-width: 30px; /* 極度壓縮單元格寬度 */
-            padding: 4px 2px; 
-            writing-mode: vertical-rl; /* 實現直立文字 */
-            text-orientation: upright; /* 確保文字方向正確 */
-            line-height: 1.2;
-            font-size: 0.75rem; /* text-xs */
-        "
-    `;
-    
-    let headerCells = progressItemNames.map(name => 
-        `<th class="p-1 text-center font-bold relative" ${verticalHeaderStyle}>${name}</th>`
-    ).join('');
+    const progressTableBody = document.getElementById('progress-table');
     
     // 創建總覽表的內容
-    // 【Bug 3 修正點】：保持 w-full 和無 overflow-x-auto，讓極度壓縮的表頭解決過寬問題
     let htmlContent = `
-        <div class="w-full"> 
-            <table class="bg-white border border-slate-200">
-                <thead class="bg-indigo-600 text-white sticky top-0">
+        <div class="overflow-x-auto">
+            <table class="min-w-full bg-white border border-slate-200">
+                <thead class="bg-indigo-600 text-white">
                     <tr>
-                        <th class="p-2 text-left font-bold sticky left-0 bg-indigo-600 z-10" style="min-width: 120px;">業務員 (點擊可修改)</th>
-                        ${headerCells}
-                        <th class="p-2 text-center font-bold" style="min-width: 60px;">總進度</th>
+                        <th class="p-3 text-left font-bold w-32 sticky left-0 bg-indigo-600">業務員 (點擊可修改)</th>
+                        ${progressItemNames.map(name => `<th class="p-3 text-center font-bold">${name}</th>`).join('')}
+                        <th class="p-3 text-center font-bold">總進度</th>
                     </tr>
                 </thead>
                 <tbody id="team-progress-list-body">
@@ -3434,15 +3413,11 @@ async function renderTeamProgressList(allUsers) {
                 completedCount++;
             }
             
-            // 使用更小的圖示 (h-4 w-4)
             const icon = isCompleted 
-                ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` 
-                : `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+                ? `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-500 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>` 
+                : `<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
             
-            // 壓縮單元格 padding
-            return `<td class="p-1 text-center border-l border-slate-200">
-                ${icon}
-            </td>`;
+            return `<td class="p-2 text-center border-l">${icon}</td>`;
         }).join('');
 
         const percentage = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
@@ -3450,20 +3425,20 @@ async function renderTeamProgressList(allUsers) {
         // 【新增】可點擊的業務名稱，點擊後會切換到該業務的個人進度頁
         htmlContent += `
             <tr class="border-b hover:bg-indigo-50 cursor-pointer user-progress-row" data-username="${user.username}" data-name="${user.name}">
-                <td class="p-2 font-medium text-indigo-700 sticky left-0 bg-white/90 border-r z-0" style="min-width: 120px;">
+                <td class="p-3 font-medium text-indigo-700 sticky left-0 bg-white/90 border-r" >
                     ${user.name} (${user.username})
                 </td>
                 ${statusCells}
-                <td class="p-2 text-center font-bold text-sm ${percentage === 100 ? 'text-green-600' : 'text-slate-700'}">${percentage}%</td>
+                <td class="p-3 text-center font-bold text-lg ${percentage === 100 ? 'text-green-600' : 'text-slate-700'}">${percentage}%</td>
             </tr>
         `;
     });
 
     htmlContent += `</tbody></table></div>`;
-    progressTableContainer.innerHTML = htmlContent;
-    
+    progressTableBody.innerHTML = htmlContent;
+
     // 監聽業務名稱的點擊事件
-    progressTableContainer.querySelectorAll('.user-progress-row').forEach(row => {
+    progressTableBody.querySelectorAll('.user-progress-row').forEach(row => {
         row.addEventListener('click', (e) => {
             const username = row.dataset.username;
             const name = row.dataset.name;
@@ -3474,12 +3449,6 @@ async function renderTeamProgressList(allUsers) {
             
             // 手動觸發 change 事件，讓系統回到單一業務的進度表
             selectElement.dispatchEvent(new Event('change'));
-            
-            // 點擊後要顯示原本單一業務進度表的 grid header
-            const defaultGridHeader = document.querySelector('#agent-progress-content .md\\:grid');
-            if (defaultGridHeader) {
-                defaultGridHeader.style.display = 'grid';
-            }
         });
     });
 }
@@ -3986,41 +3955,22 @@ function handleProgressLogic(sectionId) {
     
    const progressArea = document.getElementById('progress-display-area');
     const mainContentArea = document.querySelector('main');
-    
-    // 【Bug 1 修正點】：使用更穩固的選擇器，找到 Grid 標題的容器
-    const defaultGridHeader = document.querySelector('#agent-progress-content .md\\:grid'); 
-    
+   
    if (sectionId !== 'chapter0') {
         if (progressArea) {
             progressArea.classList.remove('always-fixed-progress', 'shadow-xl');
-        }
-        
-        // 確保離開進度表時，要重新顯示單一業務模式的 Grid Header
-        if (defaultGridHeader) {
-            defaultGridHeader.style.display = 'grid'; // 確保在其他章節時是預設的顯示狀態
         }
         
         mainContentArea.style.paddingTop = ''; 
         return;
     }
     
-    
     // 【核心修改 F】：判斷是否為總覽模式
     if ((loggedInRole === 'manager' || loggedInRole === 'director') && currentViewingUser === 'ALL_TEAM_PROGRESS') {
-        // 如果是總覽模式
-         if (defaultGridHeader) {
-            defaultGridHeader.style.display = 'none'; // **Bug 1 修正：強制隱藏單一業務模式的標題**
-        }
+        // 如果是總覽模式，調用總覽渲染函數
          fetchTeamMembers(loggedInTeam); // 重新獲取用戶清單並渲染總覽表
-         const currentTeam = loggedInRole === 'director' ? sessionStorage.getItem('currentSelectedTeam') : loggedInTeam;
-         const teamSuffix = loggedInRole === 'director' && currentTeam ? ` (${currentTeam}組)` : '';
-         document.getElementById('current-progress-name').textContent = `所有業務${teamSuffix}`;
-         
+         document.getElementById('current-progress-name').textContent = '所有業務';
     } else {
-        // 選擇單一用戶或一般業務員模式
-         if (defaultGridHeader) {
-            defaultGridHeader.style.display = 'grid'; // **Bug 1 修正：顯示單一業務模式的標題**
-        }
         // 否則，渲染單一用戶進度表
         renderProgressTable();
         updateProgressDisplay();
@@ -4415,9 +4365,6 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
-
-
-
 
 
 
