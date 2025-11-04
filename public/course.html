@@ -3285,7 +3285,7 @@ document.addEventListener('DOMContentLoaded', () => {
 async function fetchTeamMembers(managerTeam) {
     const loggedInUser = sessionStorage.getItem('loggedInUser');
     const loggedInRole = sessionStorage.getItem('loggedInRole');
-    const managerControlPanel = document.getElementById('manager-control-panel'); // 定義在頂層，確保能找到
+    const managerControlPanel = document.getElementById('manager-control-panel');
     
     // 函數：重新渲染成員清單
     const populateMembers = (teamToDisplay, allUsers, currentTarget) => {
@@ -3295,9 +3295,9 @@ async function fetchTeamMembers(managerTeam) {
         const selectElement = document.getElementById('team-member-select');
         const loggedInName = sessionStorage.getItem('loggedInName');
         
-        // 清空並加入預設選項：主管/總監自己的進度
-        selectElement.innerHTML = `<option value="${loggedInUser}" ${loggedInUser === currentTarget ? 'selected' : ''}>個人進度 (${loggedInName})</option>`;
-
+        // 【修正點 1】：移除 "個人進度" 選項，並加入 "請選擇業務員" 的預設提示選項
+        let optionsHtml = `<option value="PROMPT_SELECT" disabled selected>-- 請選擇業務員 --</option>`;
+        
         // 填充組員選項
         teamMembers.forEach(member => {
             const option = document.createElement('option');
@@ -3308,12 +3308,14 @@ async function fetchTeamMembers(managerTeam) {
             if (member.username === currentTarget) {
                  option.selected = true;
             }
-            selectElement.appendChild(option);
+            optionsHtml += option.outerHTML;
         });
         
-        // 確保目前查看的名字是正確的
+        selectElement.innerHTML = optionsHtml;
+        
+        // 確保目前查看的名字是正確的 (處理提示狀態)
         const selectedUser = allUsers.find(u => u.username === currentTarget);
-        document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : loggedInName;
+        document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : '未選擇';
     };
     
     try {
@@ -3330,54 +3332,54 @@ async function fetchTeamMembers(managerTeam) {
 
         const allUsers = data.users;
         
+        // 決定預設的目標組別和目標用戶
+        let targetTeam = managerTeam;
+        let targetUser = 'PROMPT_SELECT'; // 預設為提示狀態
+        
         if (loggedInRole === 'director') {
             const uniqueTeams = [...new Set(allUsers.map(user => user.team))].filter(t => t);
             
-            // 找出當前選擇的組別或預設組別 (如果沒有選擇，預設為A組或第一個)
             const currentSelectedTeam = sessionStorage.getItem('currentSelectedTeam') || 'A組';
-            let targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
+            targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
             
             // 創建總監介面
             managerControlPanel.innerHTML = `
                 <h5 class="font-bold text-indigo-700 mb-2">總監控制面板 (可切換組別)</h5>
                 <div id="team-and-member-controls" class="flex flex-col sm:flex-row gap-3">
                     <select id="team-filter-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
-                        ${uniqueTeams.map(team => `<option value="${team}" ${team === targetTeam ? 'selected' : ''}>${team} 進度</option>`).join('')}
+                        ${uniqueTeams.map((team, index) => `<option value="${team}" ${team === targetTeam ? 'selected' : ''}>${team} 進度</option>`).join('')}
                     </select>
                     <select id="team-member-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
                     </select>
                 </div>
                 <div id="current-user-info" class="w-full mt-3 p-2 bg-indigo-100 rounded-lg text-sm text-indigo-700 flex items-center justify-center">
-                    目前查看：<span id="current-progress-name" class="font-bold ml-1">個人進度</span>
+                    目前查看：<span id="current-progress-name" class="font-bold ml-1">未選擇</span>
                 </div>
             `;
             
             // 初始填充成員清單
-            populateMembers(targetTeam, allUsers, currentViewingUser);
+            populateMembers(targetTeam, allUsers, targetUser);
             
             // 監聽組別切換事件
             const teamFilterSelect = document.getElementById('team-filter-select');
             teamFilterSelect.addEventListener('change', (e) => {
                 const newTeam = e.target.value;
-                sessionStorage.setItem('currentSelectedTeam', newTeam); // 儲存當前組別
+                sessionStorage.setItem('currentSelectedTeam', newTeam);
                 
-                // 切換組別時，預設查看總監自己的進度
-                currentViewingUser = loggedInUser; 
+                currentViewingUser = 'PROMPT_SELECT'; // 切回提示狀態
                 
-                populateMembers(newTeam, allUsers, loggedInUser); 
+                populateMembers(newTeam, allUsers, 'PROMPT_SELECT'); 
                 
-                // 必須重新載入進度
-                loadProgressFromFirebase();
+                loadProgressFromFirebase(); // 載入提示狀態的空白進度
             });
         } else {
              // 主管模式：保持不變，只顯示自己組別的成員
-             populateMembers(managerTeam, allUsers, currentViewingUser);
+             populateMembers(managerTeam, allUsers, targetUser);
         }
 
-        // 監聽成員選擇事件 (不論主管或總監) - **這部分很重要，要確保只註冊一次**
+        // 監聽成員選擇事件 (不論主管或總監)
         const memberSelectElement = document.getElementById('team-member-select');
         
-        // 先移除可能存在的舊監聽器 (防止重複註冊導致多次載入)
         if(memberSelectElement._listener) {
              memberSelectElement.removeEventListener('change', memberSelectElement._listener);
         }
@@ -3386,18 +3388,18 @@ async function fetchTeamMembers(managerTeam) {
             const selectedUsername = e.target.value;
             const selectedUser = allUsers.find(u => u.username === selectedUsername);
 
-            currentViewingUser = selectedUsername; // <--- 修正點：更新當前查看對象
+            currentViewingUser = selectedUsername;
             
-            document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : sessionStorage.getItem('loggedInName');
+            document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : '未選擇';
             
-            // 必須重新載入進度
             loadProgressFromFirebase();
         };
 
         memberSelectElement.addEventListener('change', memberChangeListener);
-        memberSelectElement._listener = memberChangeListener; // 儲存監聽器引用
+        memberSelectElement._listener = memberChangeListener; 
         
-        // 確保在函數結束時，進度表是載入狀態
+        // 【修正點 2】：初次載入時，將 currentViewingUser 設為提示狀態
+        currentViewingUser = targetUser;
         loadProgressFromFirebase();
     } catch (error) {
         console.error('Failed to fetch team members:', error);
@@ -3485,12 +3487,18 @@ function resetAudioPlayerUI() {
     const mainContentArea = chapterView.querySelector('main');
     const chapterTemplate = document.getElementById('chapter-content-template');
     function updateProgressTitle() {
-    const loggedInName = sessionStorage.getItem('loggedInName');
-    const titleElement = document.getElementById('progress-table-title'); 
-    if (titleElement && loggedInName) {
-        titleElement.innerHTML = `<span class="text-amber-500 font-extrabold">${loggedInName}</span><br>菁英課程進度表`;
+        const loggedInName = sessionStorage.getItem('loggedInName');
+        const loggedInRole = sessionStorage.getItem('loggedInRole');
+        const titleElement = document.getElementById('progress-table-title');
+        
+        if (titleElement && loggedInName) {
+            if (loggedInRole === 'manager' || loggedInRole === 'director') { // 【修正點 4】：主管/總監模式
+                 titleElement.innerHTML = `組員進度追蹤表`; // 顯示中性標題
+            } else {
+                 titleElement.innerHTML = `<span class="text-amber-500 font-extrabold">${loggedInName}</span><br>菁英課程進度表`;
+            }
+        }
     }
-}
     const sidebarNav = document.getElementById('sidebar-nav');
     const backToTocDesktop = document.getElementById('back-to-toc-desktop');
     const backToTocMobile = document.getElementById('back-to-toc-mobile');
@@ -3513,6 +3521,20 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     const loggedInTeam = sessionStorage.getItem('loggedInTeam');
     let currentViewingUser = loggedInUser; // 當前查看進度的用戶，預設為自己
     function loadProgressFromFirebase() {
+        if (currentViewingUser === 'PROMPT_SELECT') { // 【修正點 3】：處理提示狀態
+             progressData = {};
+             if (document.getElementById('chapter0').classList.contains('active')) {
+                 renderProgressTable();
+                 updateProgressDisplay();
+             }
+             // 額外顯示提示訊息
+             const motivationText = document.getElementById('progress-motivation');
+             if (motivationText) {
+                 motivationText.innerHTML = `<span class="text-lg font-extrabold text-red-600 animate-pulse">請從上方下拉選單中選擇一位業務員。</span>`;
+             }
+             return;
+        }
+
         if (!currentViewingUser || typeof db === 'undefined') {
             console.error("Firebase 或使用者未準備好。");
             return;
@@ -4336,6 +4358,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
