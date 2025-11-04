@@ -3243,29 +3243,32 @@ async function fetchTeamMembers(managerTeam) {
         let targetUser = 'PROMPT_SELECT'; // 預設為提示狀態
         
        if (loggedInRole === 'director') {
-const uniqueTeams = [...new Set(allUsers.map(user => user.team))].filter(t => t);
-**` const currentSelectedTeam = sessionStorage.getItem('currentSelectedTeam')
-targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
-const teamMembers = allUsers.filter(
-user => user.team === targetTeam && user.role === 'agent'
-);
-// 創建總監介面
-` managerControlPanel.innerHTML = ``
-                <h5 class="font-bold text-indigo-700 mb-2">總監控制面板 (可切換組別)</h5>
-                <div id="team-and-member-controls" class="flex flex-col sm:flex-row gap-3">
-                    <select id="team-filter-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
-                        ${uniqueTeams.map((team, index) => `<option value="${team}" ${team === targetTeam ? 'selected' : ''}>${team} 進度</option>`).join('')}
-                    </select>
-                    <select id="team-member-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
-                        <option value="ALL_MEMBERS_LIST" class="text-red-600 font-bold">--- 所有組員清單明細 ---</option> 
-                        <option value="PROMPT_SELECT" disabled selected>-- 請選擇業務員 --</option>
-                        ${teamMembers.map(member => `<option value="${member.username}">${member.name} (${member.username}) - ${member.team}</option>`).join('')}
-                    </select>
-                </div>
-                <div id="current-user-info" class="w-full mt-3 p-2 bg-indigo-100 rounded-lg text-sm text-indigo-700 flex items-center justify-center">
-                    目前查看：<span id="current-progress-name" class="font-bold ml-1">未選擇</span>
-                </div>
-            `;
+    const uniqueTeams = [...new Set(allUsers.map(user => user.team))].filter(t => t);
+    
+    // **注意：這裡已經移除了錯誤的 Markdown 符號**
+    const currentSelectedTeam = sessionStorage.getItem('currentSelectedTeam');
+    targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
+    const teamMembers = allUsers.filter(
+        user => user.team === targetTeam && user.role === 'agent'
+    );
+    
+    // 創建總監介面
+    managerControlPanel.innerHTML = `
+        <h5 class="font-bold text-indigo-700 mb-2">總監控制面板 (可切換組別)</h5>
+        <div id="team-and-member-controls" class="flex flex-col sm:flex-row gap-3">
+            <select id="team-filter-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                ${uniqueTeams.map((team, index) => `<option value="${team}" ${team === targetTeam ? 'selected' : ''}>${team} 進度</option>`).join('')}
+            </select>
+            <select id="team-member-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <option value="ALL_MEMBERS_LIST" class="text-red-600 font-bold">--- 所有組員清單明細 ---</option> 
+                <option value="PROMPT_SELECT" disabled selected>-- 請選擇業務員 --</option>
+                ${teamMembers.map(member => `<option value="${member.username}">${member.name} (${member.username}) - ${member.team}</option>`).join('')}
+            </select>
+        </div>
+        <div id="current-user-info" class="w-full mt-3 p-2 bg-indigo-100 rounded-lg text-sm text-indigo-700 flex items-center justify-center">
+            目前查看：<span id="current-progress-name" class="font-bold ml-1">未選擇</span>
+        </div>
+    `;
             
             // 初始填充成員清單
             populateMembers(targetTeam, allUsers, targetUser);
@@ -4343,6 +4346,7 @@ loadProgressFromFirebase();
     
 </body>
 </html>
+
 
 
 
