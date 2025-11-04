@@ -8078,7 +8078,15 @@ function handleProgressLogic(sectionId) {
 
                 // 【注意：這裡移除了舊的日期連動邏輯】
 
-            } else if (isCountInput) {
+           if (e.target.checked) {
+                    const today = new Date().toISOString().split('T')[0];
+                    progressData[index].completionDate = today;
+                } else {
+                    // 取消勾選時，清空日期
+                    progressData[index].completionDate = '';
+                }
+                // 【注意】：這裡的日期更新邏輯會被下面的 saveProgress() 觸發的 renderProgressTable() 處理
+            } else if (isCountInput) {
 
                 const countName = e.target.dataset.countName;
 
@@ -8737,6 +8745,7 @@ function handleProgressLogic(sectionId) {
 </body>
 
 </html>
+
 
 
 
