@@ -3483,7 +3483,7 @@ window.hideProgressDetail = () => {
 
             const incompleteCount = progressItemsCount - completedCount;
             const percentage = progressItemsCount > 0 ? Math.round((completedCount / progressItemsCount) * 100) : 0;
-            const row = document.createElement('tr');
+          
 
             const memberKey = agent.username; // 用戶名作為唯一鍵
             // 【修正 1 確保資料正確存入】
@@ -4522,6 +4522,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
