@@ -3300,13 +3300,21 @@ async function showManagerDashboard(chapterId, title) {
     document.getElementById('table-of-contents').style.display = 'none';
     chapterView.style.display = 'flex';
     
-    // 隱藏/清除章節內容
+    // 1. 隱藏所有章節內容 (包括其他章節和舊的儀表板)
     mainContentArea.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
     
-    // 創建儀表板容器
-    const dashboardContainer = document.createElement('div');
-    dashboardContainer.id = 'manager-dashboard-content';
-    dashboardContainer.className = 'content-section active space-y-8';
+    let dashboardContainer = document.getElementById('manager-dashboard-content');
+    
+    if (!dashboardContainer) {
+        // 2. 如果儀表板容器不存在，則創建它
+        dashboardContainer = document.createElement('div');
+        dashboardContainer.id = 'manager-dashboard-content';
+        // 加上 content-section 讓 showContent 的清除邏輯可以處理它
+        dashboardContainer.className = 'content-section space-y-8'; 
+        mainContentArea.appendChild(dashboardContainer);
+    }
+    
+    // 3. 重新渲染儀表板內容 (確保數據最新，每次進入都重繪)
     dashboardContainer.innerHTML = `
         <header>
             <h2 class="text-4xl font-bold text-slate-800 border-b-4 border-indigo-500 pb-3 mb-2">${title}</h2>
@@ -3336,9 +3344,8 @@ async function showManagerDashboard(chapterId, title) {
         </div>
     `;
     
-    // 清除舊的內容，插入新的儀表板
-    mainContentArea.innerHTML = '';
-    mainContentArea.appendChild(dashboardContainer);
+    // 4. 顯示儀表板
+    dashboardContainer.classList.add('active');
 
     // 更新導航列和標題
     sidebarNav.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
@@ -4424,6 +4431,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
