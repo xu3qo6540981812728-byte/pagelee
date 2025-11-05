@@ -3723,7 +3723,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             audioPlayerContainer.style.display = 'none';
         }
     }
-    window.showChapterView = function(chapterId) {
+    window.showChapterView = (chapterId) => {
     // 檢查是否為主管儀表板，如果是，則呼叫新函數處理
     if (chapterId === 'manager-dashboard') {
          // 透過 chapters 陣列找到標題
