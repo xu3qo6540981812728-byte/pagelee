@@ -474,11 +474,11 @@
             </p>
         <div id="manager-control-panel" class="mt-4 pt-4 border-t border-indigo-200 hidden">
     <div class="flex items-center justify-between mb-3">
-        <h5 class="font-bold text-indigo-700">主管控制面板</h5>
-        <button id="back-to-dashboard-btn" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md">
-            <i class="fas fa-arrow-left mr-2"></i>返回團隊儀表板
-        </button>
-    </div>
+                     <h5 class="font-bold text-indigo-700">主管控制面板</h5>
+                     <button id="back-to-dashboard-btn" class="inline-flex items-center px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition duration-200 shadow-md">
+                         <i class="fas fa-arrow-left mr-2"></i>返回團隊儀表板
+                     </button>
+                 </div>
     <div id="member-select-controls"> 
         <div class="flex flex-col sm:flex-row gap-3">
             <select id="team-member-select" class="w-full sm:w-1/2 p-2 border border-indigo-300 rounded-lg bg-white text-slate-700 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 transition">
@@ -3245,7 +3245,7 @@ async function fetchTeamMembers(managerTeam) {
             managerControlPanel.innerHTML = `
                  <div class="flex items-center justify-between mb-3">
                      <h5 class="font-bold text-indigo-700">總監控制面板 (可切換組別)</h5>
-                     <button id="back-to-dashboard-btn" class="inline-flex items-center px-3 py-1 bg-indigo-600 text-white text-xs font-semibold rounded-lg hover:bg-indigo-700 transition duration-200 shadow-md">
+                     <button id="back-to-dashboard-btn" class="inline-flex items-center px-3 py-1 bg-amber-600 text-white text-xs font-semibold rounded-lg hover:bg-amber-700 transition duration-200 shadow-md">
                          <i class="fas fa-arrow-left mr-2"></i>返回團隊儀表板
                      </button>
                  </div>
@@ -4534,6 +4534,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
