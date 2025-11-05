@@ -3669,9 +3669,6 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
         .catch(error => {
             console.error("載入進度資料失敗:", error);
             progressData = {}; // 清空數據，防止顯示舊的
-            renderProgressTable(); // 重新渲染一個空表或錯誤提示
-            updateProgressDisplay();
-        });
 };
     
     function saveProgress() {
@@ -4517,6 +4514,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
