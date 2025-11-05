@@ -3970,6 +3970,20 @@ function showContent(sectionId, element) {
     { name: '實戰模擬' },
     { name: '成交一件（半泡x2或全泡x1)' }
 ];
+    const chapterIdMap = {
+    '台灣房市歷史': 'chapter1',
+    '認識謄本與建物型態': 'chapter2',
+    '代書流程': 'chapter3',
+    '房地產稅務': 'chapter4',
+    '房屋拍照與建測圖': 'chapter5',
+    '開發篇：來源與實戰': 'chapter6',
+    '回報與議價藝術': 'chapter7',
+    '銀行貸款與月還款能力評估': 'chapter8',
+    '廣告法規與注意事項': 'chapter9',
+    '銷售篇：帶看與客戶探索': 'chapter10',
+    '引導收斡與調價': 'chapter11',
+    '總結：成為頂尖顧問的思維': 'chapter12'
+};
     const progressTableBody = document.getElementById('progress-table');
     const resetProgressButton = document.getElementById('reset-progress');
     let progressData = {};
@@ -4111,6 +4125,20 @@ function handleProgressLogic(sectionId) {
                 return;
             }
             const isChecked = progressData[index]?.checked || false;
+            const correspondingChapterId = chapterIdMap[item.name]; // 檢查是否有對應的章節 ID
+            let itemNameHtml = item.name;
+
+            // 判斷是否為教育課程並且有對應章節 ID
+            if (item.type !== 'header' && index <= 12 && correspondingChapterId) {
+                itemNameHtml = `
+                    <button class="text-indigo-600 hover:text-indigo-800 transition duration-200 text-left" 
+                            onclick="window.showChapterView('${correspondingChapterId}')" 
+                            title="點擊前往：${item.name}">
+                        ${item.name}
+                        <i class="fas fa-external-link-alt ml-1 text-sm"></i>
+                    </button>
+                `;
+            }
             const completionDate = progressData[index]?.completionDate || '';
             const itemWrapper = document.createElement('div');
             itemWrapper.className = 'progress-item grid grid-cols-1 md:grid-cols-[0.8fr_80px_240px_1.2fr] gap-x-4 border-t border-slate-200 px-4 py-4 hover:bg-slate-50';
@@ -4487,6 +4515,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
