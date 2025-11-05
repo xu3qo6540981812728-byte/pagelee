@@ -3359,7 +3359,7 @@ async function showManagerDashboard(chapterId, title) {
     // 開始載入所有組員的進度數據
     await loadAllMemberProgress();
 }
-    function showProgressDetail(agentName, type, completedHtml, incompleteHtml) {
+    function showProgressDetail(agentName, type, allItemsHtml, placeholder) {
     const detailView = document.getElementById('completed-items-view');
     const detailList = document.getElementById('completed-items-list');
     const dashboardTitle = document.getElementById('manager-dashboard-content').querySelector('header h2');
@@ -3369,19 +3369,26 @@ async function showManagerDashboard(chapterId, title) {
     detailView.classList.remove('hidden');
     
     // 設置標題，讓使用者知道現在正在看誰的清單
+    // 注意：這裡只顯示類型，因為 allItemsHtml 包含所有項目的 HTML
     dashboardTitle.innerHTML = `<button class="text-indigo-600 hover:text-indigo-800" onclick="hideProgressDetail()"><i class="fas fa-arrow-left mr-2"></i>返回清單</button> / ${agentName} 的 ${type} 項目`;
     
     // 清除舊內容並貼上新的條列式清單
     detailList.innerHTML = ''; 
-    
-    // 貼上對應的清單內容
+
+    // 替換掉字串中的轉義符號 (\')，確保 HTML 正確渲染
+    const listHtml = allItemsHtml.replace(/\\'/g, "'");
+
+    // 將所有項目貼上，並只篩選出對應狀態的項目 (綠色或紅色)
     if (type === '已完成') {
-        // 替換掉字串中的轉義符號 (\')，確保 HTML 正確渲染
-        detailList.innerHTML = completedHtml.replace(/\\'/g, "'"); 
-        
+        // 只顯示包含 text-green-700 的項目
+        detailList.innerHTML = listHtml.split('</div>').filter(item => item.includes('text-green-700')).map(item => item + '</div>').join('');
     } else {
-        // 替換掉字串中的轉義符號 (\')，確保 HTML 正確渲染
-        detailList.innerHTML = incompleteHtml.replace(/\\'/g, "'");
+        // 只顯示包含 text-red-700 的項目
+        detailList.innerHTML = listHtml.split('</div>').filter(item => item.includes('text-red-700')).map(item => item + '</div>').join('');
+    }
+    
+    if (detailList.innerHTML.trim() === '') {
+        detailList.innerHTML = `<div class="p-4 bg-slate-100 rounded-lg text-slate-600 text-center">該類別目前沒有項目。</div>`;
     }
 }
 
@@ -3440,71 +3447,64 @@ function hideProgressDetail() {
         tableBody.innerHTML = ''; // 清空載入中提示
         allProgressResults.forEach(({ agent, progress }) => {
             let completedCount = 0;
-            const completedItems = [];
-            const incompleteItems = [];
-
-            const completedListHtml = [];  // 用於詳細清單
-            const incompleteListHtml = []; // 用於詳細清單
             
-            progressItemsToCount.forEach((item, itemIndex) => {
+            // *** 優化點：整合後的 HTML 列表 ***
+            const completedListHtml = [];  
+            const incompleteListHtml = [];
+            // **********************************
+
+            progressItemsToCount.forEach((item) => {
                 const index = progressItems.findIndex(i => i.name === item.name);
                 const itemData = progress[index];
                 
                 let isCompleted = false;
                 const isCheckedByManager = itemData?.checked || false; 
-
-                // 檢查是否為計數項目 (例如: 觀摩)
+                
+                // 計算項目是否完成的邏輯 (不變)
                 if (item.counts && item.counts.length > 0) {
                     const allCountsFilled = item.counts.every(countName => {
                         const value = itemData?.counts?.[countName] || '';
-                        return value.trim() !== '';
+                        return value.trim() !== ''; 
                     });
                     if (isCheckedByManager && allCountsFilled) {
                         isCompleted = true;
                     }
                 } else {
-                    // 否則只看主管是否勾選
                     isCompleted = isCheckedByManager;
                 }
                 
-                const itemName = item.name; // 修正點：確保 itemName 已定義
-                
+                const itemName = item.name;
+
+                // *** 優化點：優化列表項目的 HTML 結構與樣式 ***
                 if (isCompleted) {
                     completedCount++;
-                    completedItems.push(itemName);
-                    // 收集詳細 HTML 清單
-                    completedListHtml.push(`<div class="p-3 bg-green-50 rounded-lg flex items-center"><i class="fas fa-check-circle text-green-600 mr-3"></i>${itemName}</div>`);
+                    completedListHtml.push(`<div class="text-sm py-1 flex items-start text-green-700 font-semibold"><i class="fas fa-check-circle text-green-500 mt-1 mr-2 flex-shrink-0"></i>${itemName}</div>`);
                 } else {
-                    incompleteItems.push(itemName);
-                    // 收集詳細 HTML 清單
-                    incompleteListHtml.push(`<div class="p-3 bg-red-50 rounded-lg flex items-center"><i class="fas fa-times-circle text-red-600 mr-3"></i>${itemName}</div>`);
+                    incompleteListHtml.push(`<div class="text-sm py-1 flex items-start text-red-700"><i class="fas fa-times-circle text-red-500 mt-1 mr-2 flex-shrink-0"></i>${itemName}</div>`);
                 }
+               
+
             });
 
             const percentage = progressItemsCount > 0 ? Math.round((completedCount / progressItemsCount) * 100) : 0;
             const row = document.createElement('tr');
             
-            // 點擊業務名稱的跳轉邏輯 (功能一)
+            // 點擊業務名稱的跳轉邏輯 (不變)
             const onClickHandler = `
-                // 1. 將目標業務員的 username 存入全域變數 (currentViewingUser)
                 currentViewingUser = '${agent.username}';
-                // 2. 將選取的組別存入 sessionStorage (總監模式用)
                 sessionStorage.setItem('currentSelectedTeam', '${agent.team}');
-                // 3. 模擬選擇業務員到下拉選單 (確保下拉選單和名字同步)
                 const selectEl = document.getElementById('team-member-select');
                 if (selectEl) {
-                    // 確保選項存在，選中它，並觸發 change 事件以載入數據
                     selectEl.value = '${agent.username}';
-                    // 手動更新顯示名稱 (因為我們不會觸發真正的 change 事件)
                     document.getElementById('current-progress-name').textContent = '${agent.name}';
                 }
-                // 4. 顯示章節 0 (進度表)
                 showChapterView('chapter0'); 
             `;
 
             // 轉義後的清單字串 (用於 onclick 參數傳遞)
-            const escapedCompletedList = completedListHtml.join('').replace(/'/g, "\\'");
-            const escapedIncompleteList = incompleteListHtml.join('').replace(/'/g, "\\'");
+            // 將所有項目組合成一個列表
+            const allItemsHtml = [...completedListHtml, ...incompleteListHtml].join('');
+            const escapedAllItemsHtml = allItemsHtml.replace(/'/g, "\\'");
 
 
             row.innerHTML = `
@@ -3518,17 +3518,17 @@ function hideProgressDetail() {
                 </td>
                 
                 <td class="p-3">
-                    <button class="text-green-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','已完成','${escapedCompletedList}', '${escapedIncompleteList}')">
-                        ✅ 已完成: ${completedItems.length} 項
+                    <button class="text-green-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','已完成','${escapedAllItemsHtml}', '')">
+                        ✅ 已完成: ${completedListHtml.length} 項
                     </button>
                 </td>
                 
                 <td class="p-3">
-                    <button class="text-red-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','未完成','${escapedCompletedList}', '${escapedIncompleteList}')">
-                        ❌ 待完成: ${incompleteItems.length} 項
+                    <button class="text-red-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','未完成','${escapedAllItemsHtml}', '')">
+                        ❌ 待完成: ${incompleteListHtml.length} 項
                     </button>
                 </td>
-            `;
+                `;
             tableBody.appendChild(row);
         });
 
@@ -4520,6 +4520,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
