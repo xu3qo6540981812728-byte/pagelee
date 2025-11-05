@@ -3154,46 +3154,6 @@
 </div>
     <script>
         let allMemberProgressDetails = {};
-        window.showProgressDetail = (agentName, memberKey) => {
-    const detailView = document.getElementById('completed-items-view');
-    const detailList = document.getElementById('completed-items-list');
-    
-    // 從儀表板容器中獲取標題元素
-    const dashboardTitle = document.getElementById('manager-dashboard-content').querySelector('header h2');
-
-    // 1. 隱藏主表格，顯示細節清單
-    document.getElementById('member-list-container').classList.add('hidden');
-    detailView.classList.remove('hidden');
-
-    // 2. 設置標題，並提供返回按鈕
-    dashboardTitle.innerHTML = `<button class="text-indigo-600 hover:text-indigo-800" onclick="window.hideProgressDetail()"><i class="fas fa-arrow-left mr-2"></i>返回清單</button> / ${agentName} 的學習清單`;
-
-    // 3. 載入資料並插入
-    detailList.innerHTML = '';
-    const listHtml = allMemberProgressDetails[memberKey]; // 從全域變數取出
-    detailList.innerHTML = listHtml;
-
-    if (detailList.innerHTML.trim() === '') {
-        detailList.innerHTML = `<div class="p-4 bg-slate-100 rounded-lg text-slate-600 text-center">該業務員目前沒有進度記錄。</div>`;
-    }
-}
-
-window.hideProgressDetail = () => {
-    // 1. 顯示主表格
-   document.getElementById('member-list-container').classList.remove('hidden');
-    
-    // 2. 隱藏清單細節
-    document.getElementById('completed-items-view').classList.add('hidden');
-    
-    // 3. 恢復儀表板主標題
-    const chapters = JSON.parse(sessionStorage.getItem('allChapters') || '[]');
-    const chapter = chapters.find(c => c.id === 'manager-dashboard');
-    if (chapter) {
-        document.getElementById('manager-dashboard-content').querySelector('header h2').textContent = chapter.title;
-    } else {
-        document.getElementById('manager-dashboard-content').querySelector('header h2').textContent = '團隊進度儀表板';
-    }
-}
 document.addEventListener('DOMContentLoaded', () => {
    
     const audioPlayerContainer = document.getElementById('audio-player-container');
@@ -3526,9 +3486,9 @@ function hideProgressDetail() {
             const percentage = progressItemsCount > 0 ? Math.round((completedCount / progressItemsCount) * 100) : 0;
             const row = document.createElement('tr');
 
-           const memberKey = agent.username; // 用戶名作為唯一鍵
-            allMemberProgressDetails[memberKey] = allItemsForList.join(''); 
-            const onViewDetailClick = `window.showProgressDetail('${agent.name}', '${memberKey}')`;
+            const memberKey = agent.username; // 用戶名作為唯一鍵
+allMemberProgressDetails[memberKey] = allItemsForList.join('');
+const onViewDetailClick = `showProgressDetail('${agent.name}', '${memberKey}')`;
             
             // 點擊業務名稱的跳轉邏輯 (不變)
             const onClickHandler = `
@@ -3544,20 +3504,7 @@ function hideProgressDetail() {
 
             // 轉義後的清單字串 (用於 onclick 參數傳遞)
             const escapedAllItemsHtml = allItemsForList.join('').replace(/'/g, "\\'");
-const memberKey = agent.username;
-            allMemberProgressDetails[memberKey] = allItemsForList.join(''); 
-            const onViewDetailClick = `window.showProgressDetail('${agent.name}', '${memberKey}')`;
-            
-            // =================================================================
-            // 【修正 2 核心】: 點擊業務名稱時的跳轉邏輯
-            // =================================================================
-            const onClickHandler = `
-                currentViewingUser = '${agent.username}'; // 設定當前查看用戶
-                sessionStorage.setItem('currentSelectedTeam', '${agent.team}');
-                
-                // 關鍵：呼叫 showChapterView 切換到 chapter0 (個人進度頁)
-                showChapterView('chapter0'); 
-            `;
+
 
             row.innerHTML = `
     <td class="p-3">
