@@ -3359,6 +3359,44 @@ async function showManagerDashboard(chapterId, title) {
     // 開始載入所有組員的進度數據
     await loadAllMemberProgress();
 }
+    function showProgressDetail(agentName, type, completedHtml, incompleteHtml) {
+    const detailView = document.getElementById('completed-items-view');
+    const detailList = document.getElementById('completed-items-list');
+    const dashboardTitle = document.getElementById('manager-dashboard-content').querySelector('header h2');
+    
+    // 隱藏儀表板的主表格區域 (顯示細節)
+    document.getElementById('member-list-container').classList.add('hidden');
+    detailView.classList.remove('hidden');
+    
+    // 設置標題，讓使用者知道現在正在看誰的清單
+    dashboardTitle.innerHTML = `<button class="text-indigo-600 hover:text-indigo-800" onclick="hideProgressDetail()"><i class="fas fa-arrow-left mr-2"></i>返回清單</button> / ${agentName} 的 ${type} 項目`;
+    
+    // 清除舊內容並貼上新的條列式清單
+    detailList.innerHTML = ''; 
+    
+    // 貼上對應的清單內容
+    if (type === '已完成') {
+        // 替換掉字串中的轉義符號 (\')，確保 HTML 正確渲染
+        detailList.innerHTML = completedHtml.replace(/\\'/g, "'"); 
+        
+    } else {
+        // 替換掉字串中的轉義符號 (\')，確保 HTML 正確渲染
+        detailList.innerHTML = incompleteHtml.replace(/\\'/g, "'");
+    }
+}
+
+// 這是返回主列表的函式
+function hideProgressDetail() {
+    // 顯示儀表板的主表格區域
+    document.getElementById('member-list-container').classList.remove('hidden');
+    
+    // 隱藏清單細節
+    document.getElementById('completed-items-view').classList.add('hidden');
+    
+    // 恢復儀表板主標題
+    const chapter = chapters.find(c => c.id === 'manager-dashboard');
+    document.getElementById('manager-dashboard-content').querySelector('header h2').textContent = chapter.title;
+}
     async function loadAllMemberProgress() {
     const tableBody = document.getElementById('member-progress-table');
     const loggedInRole = sessionStorage.getItem('loggedInRole');
@@ -3404,6 +3442,9 @@ async function showManagerDashboard(chapterId, title) {
             let completedCount = 0;
             const completedItems = [];
             const incompleteItems = [];
+
+            const completedListHtml = []; 
+            const incompleteListHtml = [];
             
             progressItemsToCount.forEach((item, itemIndex) => {
                 const index = progressItems.findIndex(i => i.name === item.name);
@@ -3424,13 +3465,15 @@ async function showManagerDashboard(chapterId, title) {
                     isCompleted = isCheckedByManager;
                 }
                 
-                const itemName = item.name;
-                
                 if (isCompleted) {
                     completedCount++;
                     completedItems.push(itemName);
+                    // 【修改】：新增到完整的 HTML 清單
+                    completedListHtml.push(`<div class="p-3 bg-green-50 rounded-lg flex items-center"><i class="fas fa-check-circle text-green-600 mr-3"></i>${itemName}</div>`);
                 } else {
                     incompleteItems.push(itemName);
+                    // 【修改】：新增到完整的 HTML 清單
+                    incompleteListHtml.push(`<div class="p-3 bg-red-50 rounded-lg flex items-center"><i class="fas fa-times-circle text-red-600 mr-3"></i>${itemName}</div>`);
                 }
             });
 
@@ -3438,14 +3481,20 @@ async function showManagerDashboard(chapterId, title) {
             const row = document.createElement('tr');
             
             // 點擊業務名稱的跳轉邏輯
-            const onClickHandler = `
-                // 將目標業務員的 username 存入 currentViewingUser
+           const onClickHandler = `
+                // 1. 將目標業務員的 username 存入全域變數 (currentViewingUser)
                 currentViewingUser = '${agent.username}';
-                // 將選取的組別存入 sessionStorage (總監模式用)
+                // 2. 將選取的組別存入 sessionStorage (總監模式用)
                 sessionStorage.setItem('currentSelectedTeam', '${agent.team}');
-                // 模擬選擇業務員
-                document.getElementById('current-progress-name').textContent = '${agent.name}';
-                // 顯示章節 0 (進度表)
+                // 3. 模擬選擇業務員到下拉選單 (確保下拉選單和名字同步)
+                const selectEl = document.getElementById('team-member-select');
+                if (selectEl) {
+                    // 確保選項存在，選中它，並觸發 change 事件以載入數據
+                    selectEl.value = '${agent.username}';
+                    // 手動更新顯示名稱 (因為我們不會觸發真正的 change 事件)
+                    document.getElementById('current-progress-name').textContent = '${agent.name}';
+                }
+                // 4. 顯示章節 0 (進度表)
                 showChapterView('chapter0'); 
             `;
 
@@ -3458,11 +3507,17 @@ async function showManagerDashboard(chapterId, title) {
                 <td class="p-3">
                     <div class="font-bold text-lg ${percentage === 100 ? 'text-green-600' : 'text-orange-500'}">${percentage}%</div>
                 </td>
-                <td class="p-3 text-green-600 text-sm">
-                    ${completedItems.length > 0 ? completedItems.slice(0, 3).join('、') + (completedItems.length > 3 ? '...' : '') : '無'}
+                
+                <td class="p-3">
+                    <button class="text-green-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','已完成','${completedListHtml.join('').replace(/'/g, "\\'")}', '${incompleteListHtml.join('').replace(/'/g, "\\''')}')">
+                        ✅ 已完成: ${completedItems.length} 項
+                    </button>
                 </td>
-                <td class="p-3 text-red-600 text-sm">
-                    ${incompleteItems.length > 0 ? incompleteItems.slice(0, 3).join('、') + (incompleteItems.length > 3 ? '...' : '') : '無'}
+                
+                <td class="p-3">
+                    <button class="text-red-600 hover:underline font-semibold text-sm" onclick="showProgressDetail('${agent.name}','未完成','${completedListHtml.join('').replace(/'/g, "\\'")}', '${incompleteListHtml.join('').replace(/'/g, "\\'")}')">
+                        ❌ 待完成: ${incompleteItems.length} 項
+                    </button>
                 </td>
             `;
             tableBody.appendChild(row);
@@ -4456,6 +4511,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
