@@ -3443,7 +3443,7 @@ async function loadAllMemberProgress() {
                     allItemsHtml.push(`
                         <li class="flex items-start text-sm text-green-700 leading-snug space-x-2">
                             <i class="fas fa-check-circle text-green-500 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">${itemName} ${hasDetails ? `<span class="text-xs text-slate-500"> (已完成)</span>` : ''}</div>
+                            <div class="flex-1">${itemName} ${hasDetails ? `<span class="text-xs text-slate-500"></span>` : ''}</div>
                         </li>
                     `);
                 } else {
@@ -3451,7 +3451,7 @@ async function loadAllMemberProgress() {
                     allItemsHtml.push(`
                         <li class="flex items-start text-sm text-red-700 leading-snug space-x-2">
                             <i class="fas fa-times-circle text-red-500 mt-0.5 flex-shrink-0"></i>
-                            <div class="flex-1">${itemName} ${hasDetails ? `<span class="text-xs text-slate-500"> (待完成)</span>` : ''}</div>
+                            <div class="flex-1">${itemName} ${hasDetails ? `<span class="text-xs text-slate-500"></span>` : ''}</div>
                         </li>
                     `);
                 }
@@ -4487,6 +4487,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
