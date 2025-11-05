@@ -3510,25 +3510,26 @@ window.hideProgressDetail = () => {
             
            
             const row = document.createElement('tr');
-row.innerHTML = `
-    <td class="p-3">
-        <button class="text-indigo-600 font-bold hover:text-indigo-800 transition duration-200 text-left" onclick="window.viewAgentProgress('${agent.username}', '${agent.name}')">
-            ${agent.name} (${agent.team})
-        </button>
-    </td>
-    <td class="p-3">
-        <div class="font-bold text-lg ${percentage === 100 ? 'text-green-600' : 'text-orange-500'}">${percentage}%</div>
-    </td>
-
-    <td class="p-3">
-        <button class="text-indigo-600 hover:underline font-semibold text-sm" onclick="${onViewDetailClick}">
-            <span class="text-green-600 font-bold">✅ ${completedCount} 項</span> /
-            <span class="text-red-600 font-bold">❌ ${incompleteCount} 項</span>
-            (共 ${progressItemsCount} 項)
-        </button>
-    </td>
-`;
-tableBody.appendChild(row);
+            // 修正：確保模板字串反引號 ` 完整
+            row.innerHTML = `
+                <td class="p-3">
+                    <button class="text-indigo-600 font-bold hover:text-indigo-800 transition duration-200 text-left" onclick="window.viewAgentProgress('${agent.username}', '${agent.name}')">
+                        ${agent.name} (${agent.team})
+                    </button>
+                </td>
+                <td class="p-3">
+                    <div class="font-bold text-lg ${percentage === 100 ? 'text-green-600' : 'text-orange-500'}">${percentage}%</div>
+                </td>
+    
+                <td class="p-3">
+                    <button class="text-indigo-600 hover:underline font-semibold text-sm" onclick="${onViewDetailClick}">
+                        <span class="text-green-600 font-bold">✅ ${completedCount} 項</span> /
+                        <span class="text-red-600 font-bold">❌ ${incompleteCount} 項</span>
+                        (共 ${progressItemsCount} 項)
+                    </button>
+                </td>
+            `; // <--- 這裡的反引號和分號必須在正確位置
+            tableBody.appendChild(row);
         });
 
     } catch (error) {
@@ -4520,6 +4521,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
