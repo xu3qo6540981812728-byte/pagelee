@@ -3508,10 +3508,6 @@ window.hideProgressDetail = () => {
     
     // 4. 執行畫面切換到個人進度表
     window.showChapterView('chapter0'); 
-    
-    // 5. 【新增修正】: 強制觸發資料載入與渲染。
-    // 由於 currentViewingUser 已經更新，呼叫此函數會載入新資料。
-    window.loadProgressFromFirebase(); // 載入新選擇的用戶數據
 `;
 
             // 轉義後的清單字串 (用於 onclick 參數傳遞)
@@ -3660,27 +3656,23 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             console.error("Firebase 或使用者未準備好。");
             return;
         }
-       db.collection("progressData").doc(currentViewingUser).get() // <-- 使用 currentViewingUser
-            .then(doc => {
-                if (doc.exists) {
-                    progressData = doc.data();
-                    console.log(`從 Firebase 載入 ${currentViewingUser} 的進度成功！`);
-                } else {
-                    progressData = {};
-                    console.log(`Firebase 尚未有 ${currentViewingUser} 進度，使用空白進度表。`);
-                }
+      db.collection("progressData").doc(currentViewingUser).get() // <-- 使用 currentViewingUser
+        .then(doc => {
+            if (doc.exists) {
+                progressData = doc.data();
+            } else {
+                progressData = {};
+            }
                 
-                
-                if (document.getElementById('chapter0').classList.contains('active')) {
-                     renderProgressTable();
-                     updateProgressDisplay();
-                }
-            })
-            .catch(error => {
-                console.error("載入 Firebase 進度失敗：", error);
-                progressData = {}; 
-            });
-    }
+               
+           })
+        .catch(error => {
+            console.error("載入進度資料失敗:", error);
+            progressData = {}; // 清空數據，防止顯示舊的
+            renderProgressTable(); // 重新渲染一個空表或錯誤提示
+            updateProgressDisplay();
+        });
+};
     
     function saveProgress() {
         if (!currentViewingUser || typeof db === 'undefined') {
@@ -4525,6 +4517,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
