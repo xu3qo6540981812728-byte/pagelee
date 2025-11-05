@@ -3647,8 +3647,8 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     }
    
     const chapters = [
+         { id: 'manager-dashboard', title: '團隊進度儀表板', description: '主管專用：查看團隊完成清單', role: 'manager_only' },
         { id: 'chapter0', title: '菁英課程進度表', description: '追蹤你的學習進度' },
-        { id: 'manager-dashboard', title: '團隊進度儀表板', description: '主管專用：查看團隊完成清單', role: 'manager_only' },
         { id: 'chapter1', title: '台灣房市歷史', description: '回顧過去，洞見未來' },
         { id: 'chapter2', title: '認識謄本與建物型態', description: '產權的照妖鏡，保障交易安全' },
         { id: 'chapter3', title: '代書流程', description: '從簽約到交屋的完整路徑圖' },
@@ -3788,35 +3788,36 @@ function showContent(sectionId, element) {
     // 從 sessionStorage 獲取當前登入角色
     const loggedInRole = sessionStorage.getItem('loggedInRole'); 
     
+    let chapterCount = 0; // 【新增：一個獨立的章節計數器，從 0 開始】
+
     chapterList.forEach((chapter, index) => {
-        // --- [新增判斷邏輯] ---
-        // 1. 如果章節設定了 role: 'manager_only'
-        // 2. 且當前登入者不是主管 (manager) 或總監 (director)
-        // 則直接跳過這個章節的渲染。
+        // --- 業務員隱藏儀表板邏輯 (保持不變) ---
         if (chapter.role === 'manager_only' && loggedInRole !== 'manager' && loggedInRole !== 'director') {
             return;
         }
-        // --- [新增判斷邏輯 END] ---
+        // ----------------------------------------
         
         const isManagerDashboard = chapter.id === 'manager-dashboard';
         
         const tocCard = document.createElement('a');
         tocCard.href = `#${chapter.id}`;
         
-        // --- [新增卡片樣式] ---
         let cardClass = 'toc-card bg-white p-6 rounded-xl shadow-lg flex flex-col items-center text-center';
-        let iconHtml = `<div class="bg-indigo-100 text-indigo-600 rounded-full h-12 w-12 flex items-center justify-center font-bold text-xl mb-4">${index}</div>`;
+        let iconHtml;
 
         if (isManagerDashboard) {
-            // 主管專用儀表板，使用特殊顯眼樣式
+            // 主管專用儀表板：使用特殊樣式，不計數
             cardClass = 'toc-card p-6 rounded-xl shadow-2xl flex flex-col items-center text-center bg-yellow-50 border-4 border-yellow-500 hover:bg-yellow-100 transition duration-300 transform hover:scale-[1.02]';
             iconHtml = `<div class="bg-yellow-600 text-white rounded-full h-12 w-12 flex items-center justify-center font-bold text-xl mb-4"><i class="fas fa-chart-line"></i></div>`;
+        } else {
+            // 正常章節：使用 chapterCount 編號，並增加計數
+            iconHtml = `<div class="bg-indigo-100 text-indigo-600 rounded-full h-12 w-12 flex items-center justify-center font-bold text-xl mb-4">${chapterCount}</div>`;
+            chapterCount++; // 【關鍵：在這裡增加編號】
         }
-        // --- [新增卡片樣式 END] ---
         
         tocCard.className = cardClass;
         
-        // 處理點擊事件：主管儀表板需要特別渲染
+        // 處理點擊事件
         tocCard.onclick = (e) => { 
             e.preventDefault(); 
             if (isManagerDashboard) {
@@ -3854,23 +3855,47 @@ function showContent(sectionId, element) {
     
     appWrapper.style.display = 'block'; 
     renderTOCCards(chapters);
+
+    // 【修正開始】: 替換原本使用 index 的迴圈
+
+    let navChapterCount = 0; // 新增：側邊欄的獨立計數器
+
     chapters.forEach((chapter, index) => {
+        
+        // 1. 業務帳號隱藏邏輯 (與目錄卡片保持一致)
+        if (chapter.role === 'manager_only' && loggedInRole !== 'manager' && loggedInRole !== 'director') {
+            return;
+        }
+
+        const isManagerDashboard = chapter.id === 'manager-dashboard';
+        
         const navLink = document.createElement('a');
         navLink.href = `#${chapter.id}`;
         navLink.className = `nav-link flex items-center py-3 px-4 rounded-lg transition duration-200`;
         navLink.dataset.chapterId = chapter.id;
         
-        // --- 新增：使用 showChapterView 統一處理點擊邏輯 ---
-        navLink.onclick = (e) => { e.preventDefault(); showChapterView(chapter.id); };
-        // --------------------------------------------------
+        // 2. 編號邏輯
+        let navIcon;
+        if (isManagerDashboard) {
+            // 儀表板不計數，使用圖標
+            navIcon = '<i class="fas fa-chart-line"></i>'; 
+        } else {
+            // 正常章節，使用計數器的數字
+            navIcon = navChapterCount;
+            navChapterCount++; // 每次顯示正常章節時遞增
+        }
         
-        navLink.innerHTML = `<span class="w-6 text-center mr-3">${index}</span> ${chapter.title}`;
+        // 3. 設置點擊和內容
+        navLink.onclick = (e) => { e.preventDefault(); showChapterView(chapter.id); };
+        
+        // 確保編號是 navIcon，而不是 index
+        navLink.innerHTML = `<span class="w-6 text-center mr-3">${navIcon}</span> ${chapter.title}`;
         sidebarNav.appendChild(navLink);
         
-        // 嘗試從模板中取得內容
+        // 嘗試從模板中取得內容 (保持不變)
         const content = chapterTemplate.content.querySelector('#' + chapter.id); 
         
-        // 僅當內容存在時才複製並添加到主內容區
+        // 僅當內容存在時才複製並添加到主內容區 (保持不變)
         if (content) { 
              const clonedContent = content.cloneNode(true);
              mainContentArea.appendChild(clonedContent);
@@ -4431,6 +4456,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
