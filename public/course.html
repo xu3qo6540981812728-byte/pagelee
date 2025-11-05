@@ -3359,26 +3359,24 @@ async function showManagerDashboard(chapterId, title) {
     // 開始載入所有組員的進度數據
     await loadAllMemberProgress();
 }
-function showProgressDetail(agentName, memberKey) {
-    // 之前錯誤的 'const detailView' 宣告已經被整合進這個函式體
+window.showProgressDetail = (agentName, memberKey) => {
+    // 確保函數被掛載到 window，這樣 HTML 中的 onclick="window.showProgressDetail(...)" 才能調用
     const detailView = document.getElementById('completed-items-view');
     const detailList = document.getElementById('completed-items-list');
+    
+    // 從儀表板容器中獲取標題元素
     const dashboardTitle = document.getElementById('manager-dashboard-content').querySelector('header h2');
 
-    // 隱藏儀表板的主表格區域 (顯示細節)
+    // 1. 隱藏主表格，顯示細節清單
     document.getElementById('member-list-container').classList.add('hidden');
     detailView.classList.remove('hidden');
 
-    // 設置標題：使用 window.hideProgressDetail 函式返回
+    // 2. 設置標題，並提供返回按鈕 (注意：這裡的 hideProgressDetail 不需要 window.)
     dashboardTitle.innerHTML = `<button class="text-indigo-600 hover:text-indigo-800" onclick="hideProgressDetail()"><i class="fas fa-arrow-left mr-2"></i>返回清單</button> / ${agentName} 的學習清單`;
 
-    // 清除舊內容
+    // 3. 載入資料並插入
     detailList.innerHTML = '';
-
-    // 從全域儲存區取出 HTML 內容
-    const listHtml = allMemberProgressDetails[memberKey];
-
-    // 直接插入 HTML
+    const listHtml = allMemberProgressDetails[memberKey]; // 從全域變數取出
     detailList.innerHTML = listHtml;
 
     if (detailList.innerHTML.trim() === '') {
@@ -3386,15 +3384,16 @@ function showProgressDetail(agentName, memberKey) {
     }
 }
 
-// 這是返回主列表的函式
-function hideProgressDetail() {
-    // 顯示儀表板的主表格區域
+// 這是返回主列表的函式 (不需要 window.，因為 HTML 中的呼叫已經被修正)
+window.hideProgressDetail = () => {
+    // 1. 顯示主表格
    document.getElementById('member-list-container').classList.remove('hidden');
     
-    // 隱藏清單細節
+    // 2. 隱藏清單細節
     document.getElementById('completed-items-view').classList.add('hidden');
     
-    // 恢復儀表板主標題
+    // 3. 恢復儀表板主標題
+    const chapters = JSON.parse(sessionStorage.getItem('allChapters') || '[]');
     const chapter = chapters.find(c => c.id === 'manager-dashboard');
     document.getElementById('manager-dashboard-content').querySelector('header h2').textContent = chapter.title;
 }
@@ -3487,10 +3486,14 @@ function hideProgressDetail() {
             const row = document.createElement('tr');
 
             const memberKey = agent.username; // 用戶名作為唯一鍵
-allMemberProgressDetails[memberKey] = allItemsForList.join('');
-const onViewDetailClick = `showProgressDetail('${agent.name}', '${memberKey}')`;
+            // 【修正 1 確保資料正確存入】
+            allMemberProgressDetails[memberKey] = allItemsForList.join(''); 
+            // 【修正 1 確保點擊呼叫正確的全域函數】
+            const onViewDetailClick = `window.showProgressDetail('${agent.name}', '${memberKey}')`;
             
-            // 點擊業務名稱的跳轉邏輯 (不變)
+            // =================================================================
+            // 【修正 2 核心】: 點擊業務名稱時的跳轉邏輯
+            // =================================================================
             const onClickHandler = `
                 currentViewingUser = '${agent.username}';
                 sessionStorage.setItem('currentSelectedTeam', '${agent.team}');
@@ -3499,6 +3502,7 @@ const onViewDetailClick = `showProgressDetail('${agent.name}', '${memberKey}')`;
                     selectEl.value = '${agent.username}';
                     document.getElementById('current-progress-name').textContent = '${agent.name}';
                 }
+                // 【關鍵新增】：強制跳轉到個人進度表
                 showChapterView('chapter0'); 
             `;
 
@@ -4516,6 +4520,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
