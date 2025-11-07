@@ -3726,24 +3726,26 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     const quizResult = document.getElementById('quiz-result');
 
     // 1. 取得測驗邏輯
-   const fetchQuiz = async (quizStatus_local, quizArea_local, quizResult_local, startQuizBtn_local) => { 
-    
-    // 將所有對 quizStatus/startQuizBtn 的引用替換成參數
+   const fetchQuiz = async (quizStatus_local, quizArea_local, quizResult_local, questionList_local, startQuizBtn_local) => {
+    // 這裡使用傳入的局部元素
     quizStatus_local.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> 正在產生試卷，請稍候...`; 
     startQuizBtn_local.disabled = true; 
 
     try {
-        // 注意：這裡使用 .netlify/functions/get_quiz 作為 Netlify Function 的路徑
         const response = await fetch('/.netlify/functions/get_quiz');
         const data = await response.json();
 
         if (data.success && data.quiz.length === 10) {
-            currentQuiz = data; // 儲存題目和後端答案快取
-            renderQuiz(data.quiz);
+            currentQuiz = data; 
+            // 呼叫 renderQuiz 時傳入局部元素
+            renderQuiz(data.quiz, quizArea_local, quizResult_local, questionList_local); 
+            
             quizStatus_local.className = 'mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-500 text-green-800 font-semibold'; 
             quizStatus_local.innerHTML = `✅ 試卷產生成功！請完成所有 10 題後提交作答。`; 
-            // 注意：這裡無法直接操作 submitQuizBtn.disabled，因為它不是參數。
-            // 我們假設 renderQuiz 會讓 submitQuizBtn 可用 (這是原始程式碼的設計，我們將在 showContent 中調整調用)
+            // 這裡必須找到 submitQuizBtn 來啟用它
+            const submitQuizBtn = document.getElementById('submit-quiz-btn'); 
+            if(submitQuizBtn) submitQuizBtn.disabled = false;
+            startQuizBtn_local.textContent = '🔄 重新開始考試';
         } else {
             quizStatus_local.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold'; 
             quizStatus_local.innerHTML = `❌ 試卷產生失敗：${data.message || '無法取得 10 題。'}`; 
@@ -3758,12 +3760,13 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
 };
 
     // 2. 渲染測驗介面
-    const renderQuiz = (questions) => {
-        questionList.innerHTML = '';
-        quizResult.style.display = 'none';
-        quizArea.style.display = 'block';
+ const renderQuiz = (questions, quizArea_local, quizResult_local, questionList_local) => {
+    // 將所有全局引用替換為局部參數
+    questionList_local.innerHTML = ''; 
+    quizArea_local.style.display = 'none'; // 使用局部元素
+    quizResult_local.style.display = 'block';
 
-        questions.forEach((q, index) => {
+    questions.forEach((q, index) => {
             const questionElement = document.createElement('div');
             questionElement.className = 'question-card p-4 border rounded-lg shadow-sm';
             questionElement.innerHTML = `
@@ -3783,7 +3786,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     };
 
     // 3. 提交作答邏輯
-    const submitQuiz = async (quizResult_local) => { 
+    const submitQuiz = async (quizResult_local, quizArea_local) => {
     const userAnswers = [];
         let allAnswered = true;
         const totalQuestions = currentQuiz.quiz.length;
@@ -3805,11 +3808,12 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             alert('請完成所有 10 題作答後再提交！');
             return;
         }
-const submitQuizBtn = document.getElementById('submit-quiz-btn');
-        submitQuizBtn.disabled = true;
-        submitQuizBtn.textContent = '批改中...';
-        
-        try {
+const submitQuizBtn = document.getElementById('submit-quiz-btn'); 
+
+    submitQuizBtn.disabled = true;
+    submitQuizBtn.textContent = '批改中...';
+    
+    try {
             // 注意：這裡使用 .netlify/functions/submit_quiz 作為 Netlify Function 的路徑
             const response = await fetch('/.netlify/functions/submit_quiz', {
                 method: 'POST',
@@ -3823,7 +3827,8 @@ const submitQuizBtn = document.getElementById('submit-quiz-btn');
            const data = await response.json();
 
         if (data.success) {
-            renderResult(data, quizResult_local); // 將 result_local 傳入 renderResult
+            // 呼叫 renderResult 時傳入 quizArea_local
+            renderResult(data, quizResult_local, quizArea_local); 
         } else {
             alert(`批改失敗: ${data.message}`);
             submitQuizBtn.disabled = false;
@@ -3838,7 +3843,7 @@ const submitQuizBtn = document.getElementById('submit-quiz-btn');
     };
 
     // 4. 渲染成績與解析
-    const renderResult = (resultData, quizResult_local) => {
+   const renderResult = (resultData, quizResult_local, quizArea_local) => { // 接收 quizArea_local
     const { score, correctCount, totalQuestions, results } = resultData;
         
         // 顯示成績總結
@@ -4000,30 +4005,28 @@ function showContent(sectionId, element) {
    if (sectionId === 'chapter12_5') {
     const startQuizBtn_local = newSection.querySelector('#start-quiz-btn');
     const submitQuizBtn_local = newSection.querySelector('#submit-quiz-btn');
-    const quizStatus_local = newSection.querySelector('#quiz-status'); // 新增：獲取 quizStatus
-    const quizResult_local = newSection.querySelector('#quiz-result'); // 新增：獲取 quizResult
-    const quizArea_local = newSection.querySelector('#quiz-area'); // 新增：獲取 quizArea (雖然只用全局變數)
+    const quizStatus_local = newSection.querySelector('#quiz-status');
+    const quizResult_local = newSection.querySelector('#quiz-result');
+    const quizArea_local = newSection.querySelector('#quiz-area');
+    const questionList_local = newSection.querySelector('#question-list');
     
     // 檢查是否已綁定事件，避免重複綁定
     if (startQuizBtn_local && !startQuizBtn_local._hasEventListener) {
         
-        // 【核心修正 A】：傳入所需的局部 DOM 元素
+        // 核心修正 A：傳入所有必要的局部 DOM 元素
         startQuizBtn_local.addEventListener('click', () => {
-            const quizStatus_current = newSection.querySelector('#quiz-status');
-            const quizResult_current = newSection.querySelector('#quiz-result');
-            const quizArea_current = newSection.querySelector('#quiz-area');
             
-            quizStatus_current.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
-            quizResult_current.style.display = 'none';
-            // 呼叫時傳入局部變數
-            fetchQuiz(quizStatus_current, quizArea_current, quizResult_current, startQuizBtn_local); 
+            quizStatus_local.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
+            quizResult_local.style.display = 'none';
+            // 呼叫時傳入所有局部變數
+            fetchQuiz(quizStatus_local, quizArea_local, quizResult_local, questionList_local, startQuizBtn_local); 
         });
         startQuizBtn_local._hasEventListener = true; // 標記已綁定
     }
     
     if (submitQuizBtn_local && !submitQuizBtn_local._hasEventListener) {
-        // 【核心修正 B】：呼叫時傳入 quizResult_local
-        submitQuizBtn_local.addEventListener('click', () => submitQuiz(quizResult_local)); 
+        // 核心修正 B：呼叫時傳入 quizResult_local 和 quizArea_local
+        submitQuizBtn_local.addEventListener('click', () => submitQuiz(quizResult_local, quizArea_local)); 
         submitQuizBtn_local._hasEventListener = true; // 標記已綁定
     }
 }
@@ -4765,6 +4768,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
