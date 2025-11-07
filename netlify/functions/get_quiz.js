@@ -1,15 +1,16 @@
-const fullQuizData = require('./quiz_data.json'); 
+const fullQuizData = require('./quiz_data.json');
 
 exports.handler = async (event) => {
     try {
         if (fullQuizData.length === 0) {
+            // ... (如果檔案沒有被打包進來，這裡會報錯)
             return {
                 statusCode: 500,
                 body: JSON.stringify({ success: false, message: 'Quiz data not loaded or empty.' }),
             };
         }
 
-        // 1. 隨機選取 10 題
+        // 1. 隨機選取 10 題 (這裡的邏輯保持不變)
         const shuffled = fullQuizData.sort(() => 0.5 - Math.random());
         const selectedQuestions = shuffled.slice(0, 10);
 
@@ -39,11 +40,11 @@ exports.handler = async (event) => {
             }),
         };
     } catch (e) {
+        // ... (新增一個更詳細的錯誤回傳，方便您排查)
         console.error('Error in get_quiz handler:', e);
-        // 如果上面 require() 或執行中途失敗，將回傳詳細錯誤訊息
         return {
             statusCode: 500,
-            body: JSON.stringify({ success: false, message: 'Failed to generate quiz. Check Netlify logs for details.' }),
+            body: JSON.stringify({ success: false, message: 'Failed to generate quiz. Check Netlify Functions logs for details.' + e.message }),
         };
     }
 };
