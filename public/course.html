@@ -4694,9 +4694,11 @@ function handleProgressLogic(sectionId) {
         }
     }
 
-    function startQuiz() {
+   function startQuiz() {
         quizQuestionsArea.innerHTML = '';
         isQuizSubmitted = false;
+        
+        // 渲染題目
         currentQuiz.forEach((q, index) => {
             quizQuestionsArea.appendChild(renderQuestion(q, index));
         });
@@ -4709,6 +4711,14 @@ function handleProgressLogic(sectionId) {
         
         submitQuizBtn.disabled = true;
         updateSubmitButtonState();
+        
+        // --- 修正重點：在這裡綁定選項點擊事件 ---
+        if (quizQuestionsArea) {
+             // 先移除舊的綁定（如果有的話，雖然理論上應該沒有），然後綁定新的
+             quizQuestionsArea.removeEventListener('click', handleOptionClick); 
+             quizQuestionsArea.addEventListener('click', handleOptionClick);
+        }
+        // --- 修正重點結束 ---
     }
 
     async function submitQuiz() {
@@ -4838,8 +4848,7 @@ function handleProgressLogic(sectionId) {
     if (retakeQuizBtn) retakeQuizBtn.addEventListener('click', fetchQuiz);
     if (backToTocQuizBtn) backToTocQuizBtn.addEventListener('click', showTOC); 
 
-    // Delegated listener for option clicks
-    if (quizQuestionsArea) quizQuestionsArea.addEventListener('click', handleOptionClick);
+
    
 });
         
@@ -4881,6 +4890,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
