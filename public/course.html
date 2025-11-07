@@ -3892,19 +3892,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
         submitQuizBtn.textContent = '提交作答 💾';
     };
 
-    // 5. 事件監聽
-    if (startQuizBtn) {
-        startQuizBtn.addEventListener('click', () => {
-             // 重設狀態並重新發題
-            quizStatus.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
-            quizResult.style.display = 'none';
-            fetchQuiz();
-        });
-    }
-
-    if (submitQuizBtn) {
-        submitQuizBtn.addEventListener('click', submitQuiz);
-    }
+  
     const chapters = [
          { id: 'manager-dashboard', title: '團隊進度儀表板', description: '主管專用：查看團隊完成清單', role: 'manager_only' },
         { id: 'chapter0', title: '菁英課程進度表', description: '追蹤你的學習進度' },
@@ -4015,6 +4003,32 @@ function showContent(sectionId, element) {
             
             if (typeof resetCarousel === 'function') {
                 resetCarousel();
+            }
+        }
+    if (sectionId === 'chapter12_5') {
+            // 由於 newSection 已經是 chapter12_5 的內容，我們可以在這裡找到按鈕
+            const startQuizBtn_local = newSection.querySelector('#start-quiz-btn');
+            const submitQuizBtn_local = newSection.querySelector('#submit-quiz-btn');
+            
+            // 檢查是否已綁定事件，避免重複綁定
+            if (startQuizBtn_local && !startQuizBtn_local._hasEventListener) {
+                
+                // 【核心修正】: 將 startQuizBtn, submitQuizBtn 的變數引用改為局部變數
+                startQuizBtn_local.addEventListener('click', () => {
+                    // 重設狀態並重新發題
+                    const quizStatus_local = newSection.querySelector('#quiz-status');
+                    const quizResult_local = newSection.querySelector('#quiz-result');
+                    
+                    quizStatus_local.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
+                    quizResult_local.style.display = 'none';
+                    fetchQuiz(); // 呼叫原本的 fetchQuiz 函數
+                });
+                startQuizBtn_local._hasEventListener = true; // 標記已綁定
+            }
+            
+            if (submitQuizBtn_local && !submitQuizBtn_local._hasEventListener) {
+                submitQuizBtn_local.addEventListener('click', submitQuiz); // 呼叫原本的 submitQuiz 函數
+                submitQuizBtn_local._hasEventListener = true; // 標記已綁定
             }
         }
     }
@@ -4755,6 +4769,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
