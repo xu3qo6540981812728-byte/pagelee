@@ -265,17 +265,7 @@
 #audio-player-container.expanded #audio-fab-label {
     display: none;
 }
-        #progress-display-area.always-fixed-progress {
-    position: fixed; 
-    top: 0; 
-    
-    width: calc(100% - 2rem); 
-    z-index: 50; 
-    background-color: #f0f4f8; 
-    padding: 1rem; 
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    transition: all 0.2s ease-in-out;
-}
+       
 @media (min-width: 768px) {
     #progress-display-area.always-fixed-progress {
         left: 18rem; 
@@ -3874,26 +3864,29 @@ function showContent(sectionId, element) {
         const mainContent = document.querySelector('main');
         
         if (progressArea) {
-        if (sectionId === 'chapter0') {
-            // 啟用 sticky header
-            progressArea.classList.add('always-fixed-progress', 'shadow-xl');
-            // 移除原本的 CSS padding，使用 JS 計算的高度
-            mainContent.classList.remove('pt-24', 'pt-6'); 
-            // 使用延遲來確保 offsetHeight 計算正確，並設定主內容區的 padding-top
-            setTimeout(() => {
-                const headerHeight = progressArea.offsetHeight;
-                mainContent.style.paddingTop = `${headerHeight + 40}px`; 
-            }, 50);
-        } else {
-            // 清除 sticky header
-            progressArea.classList.remove('always-fixed-progress', 'shadow-xl');
-            
-            // 清除行內樣式並恢復預設 CSS class (這裡假設 pt-24 是原始預設)
-            mainContent.style.paddingTop = ''; 
-            mainContent.classList.remove('pt-24', 'pt-6'); 
-            mainContent.classList.add('pt-24'); // 恢復到原始 CSS 預期狀態
-        }
+    if (sectionId === 'chapter0') {
+        // 【修正】: 僅確保移除掉 pt-24，讓內容從頂部開始
+        mainContent.classList.remove('pt-24'); 
+        
+        // 移除所有 JS 設置的行內樣式
+        mainContent.style.paddingTop = ''; 
+        
+        // 移除 fixed class (因為我們想用 sticky)
+        progressArea.classList.remove('always-fixed-progress', 'shadow-xl'); 
+
+        // 確保進度條的樣式 (sticky top-0 z-10) 已經在 HTML 模板中設定好
+        // 我們無需額外計算 padding-top，因為 sticky 元素不會影響內容流
+        
+    } else {
+        // 清除 sticky header
+        progressArea.classList.remove('always-fixed-progress', 'shadow-xl');
+        
+        // 清除行內樣式並恢復預設 CSS class
+        mainContent.style.paddingTop = ''; 
+        mainContent.classList.remove('pt-24', 'pt-6'); 
+        mainContent.classList.add('pt-24'); // 恢復到原始 CSS 預期狀態
     }
+}
         
         if (sectionId === 'chapter0') {
              loadProgressFromFirebase(); 
@@ -4937,6 +4930,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
