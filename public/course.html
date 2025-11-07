@@ -4844,17 +4844,13 @@ function handleProgressLogic(sectionId) {
             
             detailedResultsHtml += `
                 <div class="p-4 rounded-lg border-2 ${colorClass} shadow-md">
-                    <p class="font-bold text-lg flex items-center">
-                        <i class="fas ${iconClass} mr-3"></i> 
-                        ${index + 1}. ${question.topic} - <span class="ml-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">${resultTitle}</span>
-                    </p>
-                    <div class="mt-3 text-slate-700 space-y-1 ml-6 text-sm">
-                        <p>您的作答: <span class="font-semibold text-red-600">${res.userOption}</span></p>
-                        <p>正確答案: <span class="font-semibold text-green-600">${res.correctOption || optionLabels[res.correctSelectedIndex]}</span></p>
-                        <p class="font-bold mt-2 pt-2 border-t border-slate-300">相關章節: ${sourceAnswer ? sourceAnswer.source : 'N/A'}</p>
-                    </div>
-                </div>
-            `;
+        <p class="font-bold text-lg flex items-center">
+            <i class="fas ${iconClass} mr-3"></i> 
+            ${index + 1}. ${question.topic} - <span class="ml-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">${resultTitle}</span>
+        </p>
+        
+        </div>
+`;
         });
         
         document.getElementById('detailed-results').innerHTML = detailedResultsHtml;
@@ -4916,6 +4912,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
