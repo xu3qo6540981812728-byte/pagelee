@@ -3798,7 +3798,9 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
         showContent(chapterId, navLink);
     }
 }
-
+  if (chapterId === 'chapter13') {
+            resetQuizUI(); 
+        }
 function showContent(sectionId, element) {
         
        localStorage.setItem('lastChapterId', sectionId);
@@ -3833,11 +3835,7 @@ function showContent(sectionId, element) {
             audio.src = "";
         }
         audioPlayerContainer.classList.remove('expanded');
-         if (sectionId === 'chapter13') {
-            if (typeof resetQuizUI === 'function') {
-                resetQuizUI(); 
-            }
-        }
+        
         if (sectionId === 'chapter0') {
              loadProgressFromFirebase(); 
         }
@@ -4798,7 +4796,6 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
-
 
 
 
