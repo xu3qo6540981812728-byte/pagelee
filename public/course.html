@@ -21,13 +21,13 @@
                     sans: ['Noto Sans TC', 'Inter', 'sans-serif'],
                 },
                 colors: {
-                    '透天-綠': '#10B981', // Emerald Green
-                    '公寓-黃': '#FBBF24', // Amber Yellow (Now used for Apartment A)
-                    '大樓-藍': '#3B82F6', // Blue
-                    '華廈-橘': '#F97316', // Orange
-                    '平均-灰': '#9CA3AF', // Gray
-                    '核心公寓-綠': '#FBBF24', // Update: Use Amber Yellow for Core Area Apartment A
-                    '其他公寓-棕': '#78350F', // Other Area Apartment (New)
+                    '透天-綠': '#10B981', 
+                    '公寓-黃': '#FBBF24', 
+                    '大樓-藍': '#3B82F6', 
+                    '華廈-橘': '#F97316', 
+                    '平均-灰': '#9CA3AF', 
+                    '核心公寓-綠': '#FBBF24', 
+                    '其他公寓-棕': '#78350F', 
                 }
             }
         }
@@ -3089,34 +3089,7 @@
     </div>
 </div>
        </div> <!-- Chapter 12 End -->
-            </div> <div id="chapter12_5" class="content-section space-y-8">
-            <header class=" ">
-                <h2 class="text-4xl font-bold text-slate-800 border-b-4 border-indigo-500 pb-3 mb-2">菁英課程模擬考</h2>
-                <p class="text-slate-500">隨機抽取 10 題，立即自我評量！</p>
-            </header>
-            <div class="bg-white p-8 rounded-xl shadow-lg content-card animate-on-scroll">
-                <div id="quiz-status" class="mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold">
-                    點擊「開始考試」按鈕，隨機產生 10 題測驗！
-                </div>
-
-                <button id="start-quiz-btn" class="w-full py-3 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition duration-300 shadow-md">
-                    🚀 開始考試
-                </button>
-
-                <div id="quiz-area" class="mt-8 space-y-8" style="display:none;">
-                    <div id="question-list" class="space-y-6">
-                        </div>
-                    <div id="quiz-controls" class="flex justify-center space-x-4 border-t pt-6">
-                        <button id="submit-quiz-btn" class="py-3 px-8 bg-red-600 text-white font-bold rounded-lg hover:bg-red-700 transition duration-300 shadow-md" disabled>
-                            提交作答 💾
-                        </button>
-                    </div>
-                </div>
-
-                <div id="quiz-result" class="mt-8" style="display:none;">
-                    </div>
-            </div>
-        </div>
+            
             </div><div id="chapter13" class="content-section space-y-8">
             <header class=" ">
                 <h2 class="text-4xl font-bold text-slate-800 border-b-4 border-indigo-500 pb-3 mb-2">實用工具箱</h2>
@@ -3188,7 +3161,6 @@
 </div>
     <script>
         let allMemberProgressDetails = {};
-       
 document.addEventListener('DOMContentLoaded', () => {
    
     const audioPlayerContainer = document.getElementById('audio-player-container');
@@ -3215,7 +3187,7 @@ async function fetchTeamMembers(managerTeam) {
     const loggedInRole = sessionStorage.getItem('loggedInRole');
     const managerControlPanel = document.getElementById('manager-control-panel');
     
-    // 函數：重新渲染成員清單
+    
     const populateMembers = (teamToDisplay, allUsers, currentTarget) => {
         const teamMembers = allUsers.filter(
             user => user.team === teamToDisplay && user.role === 'agent'
@@ -3223,16 +3195,16 @@ async function fetchTeamMembers(managerTeam) {
         const selectElement = document.getElementById('team-member-select');
         const loggedInName = sessionStorage.getItem('loggedInName');
         
-        // 【修正點 1】：移除 "個人進度" 選項，並加入 "請選擇業務員" 的預設提示選項
+        
         let optionsHtml = `<option value="PROMPT_SELECT" disabled selected>-- 請選擇業務員 --</option>`;
         
-        // 填充組員選項
+        
         teamMembers.forEach(member => {
             const option = document.createElement('option');
             option.value = member.username;
             option.textContent = `${member.name} (${member.username}) - ${member.team}`;
             
-            // 讓上一次選擇的成員保持選中
+            
             if (member.username === currentTarget) {
                  option.selected = true;
             }
@@ -3241,7 +3213,7 @@ async function fetchTeamMembers(managerTeam) {
         
         selectElement.innerHTML = optionsHtml;
         
-        // 確保目前查看的名字是正確的 (處理提示狀態)
+       
         const selectedUser = allUsers.find(u => u.username === currentTarget);
         document.getElementById('current-progress-name').textContent = selectedUser ? selectedUser.name : '未選擇';
     };
@@ -3259,9 +3231,9 @@ async function fetchTeamMembers(managerTeam) {
         }
         const allUsers = data.users;
         
-        // 決定預設的目標組別和目標用戶
+        
         let targetTeam = managerTeam;
-        let targetUser = 'PROMPT_SELECT'; // 預設為提示狀態
+        let targetUser = 'PROMPT_SELECT'; 
         
         if (loggedInRole === 'director') {
             const uniqueTeams = [...new Set(allUsers.map(user => user.team))].filter(t => t);
@@ -3269,7 +3241,7 @@ async function fetchTeamMembers(managerTeam) {
             const currentSelectedTeam = sessionStorage.getItem('currentSelectedTeam') || 'A組';
             targetTeam = uniqueTeams.includes(currentSelectedTeam) ? currentSelectedTeam : uniqueTeams[0];
             
-            // 創建總監介面
+            
             managerControlPanel.innerHTML = `
                  <div class="flex items-center justify-between mb-3">
                      <h5 class="font-bold text-indigo-700">總監控制面板 (可切換組別)</h5>
@@ -3289,26 +3261,26 @@ async function fetchTeamMembers(managerTeam) {
                  </div>
             `;
             
-            // 初始填充成員清單
+           
             populateMembers(targetTeam, allUsers, targetUser);
             
-            // 監聽組別切換事件
+            
             const teamFilterSelect = document.getElementById('team-filter-select');
             teamFilterSelect.addEventListener('change', (e) => {
                 const newTeam = e.target.value;
                 sessionStorage.setItem('currentSelectedTeam', newTeam);
                 
-                currentViewingUser = 'PROMPT_SELECT'; // 切回提示狀態
+                currentViewingUser = 'PROMPT_SELECT'; 
                 
                 populateMembers(newTeam, allUsers, 'PROMPT_SELECT'); 
                 
-                loadProgressFromFirebase(); // 載入提示狀態的空白進度
+                loadProgressFromFirebase(); 
             });
         } else {
-             // 主管模式：保持不變，只顯示自己組別的成員
+             
              populateMembers(managerTeam, allUsers, targetUser);
         }
-        // 監聽成員選擇事件 (不論主管或總監)
+        
         const memberSelectElement = document.getElementById('team-member-select');
         
         if(memberSelectElement._listener) {
@@ -3327,7 +3299,7 @@ async function fetchTeamMembers(managerTeam) {
         memberSelectElement.addEventListener('change', memberChangeListener);
         memberSelectElement._listener = memberChangeListener; 
         
-        // 【修正點 2】：初次載入時，將 currentViewingUser 設為提示狀態
+       
         currentViewingUser = targetUser;
         loadProgressFromFirebase();
     } catch (error) {
@@ -3341,21 +3313,21 @@ async function showManagerDashboard(chapterId, title) {
     document.getElementById('table-of-contents').style.display = 'none';
     chapterView.style.display = 'flex';
     
-    // 1. 隱藏所有章節內容 (包括其他章節和舊的儀表板)
+    
     mainContentArea.querySelectorAll('.content-section').forEach(section => section.classList.remove('active'));
     
     let dashboardContainer = document.getElementById('manager-dashboard-content');
     
     if (!dashboardContainer) {
-        // 2. 如果儀表板容器不存在，則創建它
+        
         dashboardContainer = document.createElement('div');
         dashboardContainer.id = 'manager-dashboard-content';
-        // 加上 content-section 讓 showContent 的清除邏輯可以處理它
+        
         dashboardContainer.className = 'content-section space-y-8'; 
         mainContentArea.appendChild(dashboardContainer);
     }
     
-    // 3. 重新渲染儀表板內容 (移除舊的細節容器，並在表格標題中顯示所有項目)
+    
     dashboardContainer.innerHTML = `
         <header>
             <h2 class="text-4xl font-bold text-slate-800 border-b-4 border-indigo-500 pb-3 mb-2">${title}</h2>
@@ -3367,7 +3339,7 @@ async function showManagerDashboard(chapterId, title) {
                 <table class="min-w-full bg-white border border-slate-200 rounded-lg">
                     <thead class="bg-slate-200">
                         <tr>
-                            <th class="p-3 text-left font-bold text-gray-700 w-1/4">業務員 (組別) - 點擊查看進度表</th>
+                            <th class="p-3 text-left font-bold text-gray-700 w-1/4">業務員 (組別)<br/> - 點擊名稱查看進度表</th>
                             <th class="p-3 text-left font-bold text-gray-700 w-1/6">總體進度</th>
                             <th class="p-3 text-left font-bold text-gray-700 w-auto">學習進度細節</th>
                             </tr>
@@ -3380,37 +3352,37 @@ async function showManagerDashboard(chapterId, title) {
         </div>
         `;
     
-    // 4. 顯示儀表板
+    
     dashboardContainer.classList.add('active');
 
-    // 更新導航列和標題
+    
     sidebarNav.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
     document.getElementById('mobile-header-title').textContent = title;
     
-    // 隱藏音頻播放器和上下章節按鈕
+    
     audioPlayerContainer.style.display = 'none';
     prevChapterBtn.classList.add('hidden');
     nextChapterBtn.classList.add('hidden');
     
-    // 開始載入所有組員的進度數據
+    
     await loadAllMemberProgress();
 }
 
     window.viewAgentProgress = (username, name) => {
-    // 1. 設定當前查看用戶
+   
     currentViewingUser = username; 
 
-    // 2. 更新下拉選單及名稱顯示 (確保 UI 同步)
+    
     const selectEl = document.getElementById('team-member-select');
     if (selectEl) {
         selectEl.value = username;
         document.getElementById('current-progress-name').textContent = name;
     }
     
-    // 3. 執行畫面切換到個人進度表 (並傳入用戶資訊，確保回報進度表的標題正確)
+    
     window.showChapterView('chapter0'); 
     
-    // 4. 強制載入並更新進度表 (核心修正：確保載入的是新用戶的資料)
+    
     window.loadProgressFromFirebase();
 };
 async function loadAllMemberProgress() {
@@ -3443,14 +3415,14 @@ async function loadAllMemberProgress() {
         );
         const allProgressResults = await Promise.all(progressPromises);
 
-        // 重新定義進度項目，只包含需要計數的
+        
         const progressItemsToCount = progressItems.filter(item => item.type !== 'header');
         const progressItemsCount = progressItemsToCount.length;
 
         tableBody.innerHTML = '';
         allProgressResults.forEach(({ agent, progress }) => {
             let completedCount = 0;
-            const allItemsHtml = []; // 用於儲存詳細清單的 HTML
+            const allItemsHtml = []; 
             
             progressItemsToCount.forEach((item) => {
                 const index = progressItems.findIndex(i => i.name === item.name);
@@ -3459,7 +3431,7 @@ async function loadAllMemberProgress() {
                 let isCompleted = false;
                 const isCheckedByManager = itemData?.checked || false; 
                 
-                // 計算是否完成的邏輯
+                
                 if (item.counts && item.counts.length > 0) {
                     const allCountsFilled = item.counts.every(countName => {
                         const value = itemData?.counts?.[countName] || '';
@@ -3474,12 +3446,12 @@ async function loadAllMemberProgress() {
                 
                 const itemName = item.name;
                 
-                // 檢查是否有備註或次數紀錄，如果都沒有則不顯示細節
+               
                 const hasDetails = itemData?.remark || item.counts?.some(c => itemData?.counts?.[c]);
 
                 if (isCompleted) {
                     completedCount++;
-                    // 如果完成，顯示綠色勾
+                    
                     allItemsHtml.push(`
                         <li class="flex items-start text-sm text-green-700 leading-snug space-x-2">
                             <i class="fas fa-check-circle text-green-500 mt-0.5 flex-shrink-0"></i>
@@ -3487,7 +3459,7 @@ async function loadAllMemberProgress() {
                         </li>
                     `);
                 } else {
-                    // 如果未完成，顯示紅色叉
+                    
                     allItemsHtml.push(`
                         <li class="flex items-start text-sm text-red-700 leading-snug space-x-2">
                             <i class="fas fa-times-circle text-red-500 mt-0.5 flex-shrink-0"></i>
@@ -3500,11 +3472,11 @@ async function loadAllMemberProgress() {
             const incompleteCount = progressItemsCount - completedCount;
             const percentage = progressItemsCount > 0 ? Math.round((completedCount / progressItemsCount) * 100) : 0;
           
-            const memberKey = agent.username; // 用戶名作為唯一鍵
+            const memberKey = agent.username; 
             
-            // 1. 創建主行
+           
             const mainRow = document.createElement('tr');
-            mainRow.className = 'main-progress-row'; // 新增 class 以便區分
+            mainRow.className = 'main-progress-row';
             mainRow.innerHTML = `
                 <td class="p-3">
                     <button class="text-indigo-600 font-bold hover:text-indigo-800 transition duration-200 text-left" onclick="window.viewAgentProgress('${agent.username}', '${agent.name}')">
@@ -3523,7 +3495,7 @@ async function loadAllMemberProgress() {
             `; 
             tableBody.appendChild(mainRow);
             
-            // 2. 創建詳細清單行 (預設展開)
+            
             const detailRow = document.createElement('tr');
             detailRow.className = 'detail-progress-row bg-slate-50 border-b border-slate-200';
             detailRow.innerHTML = `
@@ -3618,11 +3590,11 @@ function resetAudioPlayerUI() {
         
         if (titleElement && loggedInName) {
             if (loggedInRole === 'manager' || loggedInRole === 'director') {
-                 // 【修正點 3】：主管/總監模式
-                 titleElement.textContent = `組員進度追蹤表`; // 顯示中性標題
+                
+                 titleElement.textContent = `組員進度追蹤表`; 
                  subtitleElement.textContent = `請從上方控制面板選擇業務員查看進度`;
             } else {
-                 // 業務員模式
+                 
                  titleElement.innerHTML = `<span class="text-amber-500 font-extrabold">${loggedInName}</span><br>菁英課程進度表`;
                  subtitleElement.textContent = `追蹤並記錄你的學習與實戰進度`;
             }
@@ -3645,23 +3617,23 @@ function resetAudioPlayerUI() {
     const loggedInUser = sessionStorage.getItem('loggedInUser');
 const loggedInRole = sessionStorage.getItem('loggedInRole'); 
     const loggedInTeam = sessionStorage.getItem('loggedInTeam');
-    let currentViewingUser = loggedInUser; // 當前查看進度的用戶，預設為自己
+    let currentViewingUser = loggedInUser; 
     window.loadProgressFromFirebase = () => {
         
-        // 【修正點 4】：如果處於提示狀態，則清空數據並顯示提示
+        
         if (currentViewingUser === 'PROMPT_SELECT') { 
              progressData = {};
              if (document.getElementById('chapter0').classList.contains('active')) {
                  renderProgressTable();
                  updateProgressDisplay();
              }
-             return; // 這裡直接返回，不進行 Firebase 查詢
+             return; 
         }
         if (!currentViewingUser || typeof db === 'undefined') {
             console.error("Firebase 或使用者未準備好。");
             return;
         }
-       db.collection("progressData").doc(currentViewingUser).get() // <-- 使用 currentViewingUser
+       db.collection("progressData").doc(currentViewingUser).get() 
             .then(doc => {
                 if (doc.exists) {
                     progressData = doc.data();
@@ -3689,7 +3661,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             console.error("未登入使用者，無法儲存進度。");
             return;
         }
-        db.collection("progressData").doc(currentViewingUser).set(progressData) // <-- 儲存到 currentViewingUser
+        db.collection("progressData").doc(currentViewingUser).set(progressData) 
             .then(() => {
                 // console.log("寫入 Firebase 成功");
             })
@@ -3716,180 +3688,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
         bg.innerHTML = svg;
         document.body.appendChild(bg);
     }
-   let currentQuiz = null; // 儲存當前測驗的題目和答案快取
-
-    const startQuizBtn = document.getElementById('start-quiz-btn');
-    const submitQuizBtn = document.getElementById('submit-quiz-btn');
-    const quizStatus = document.getElementById('quiz-status');
-    const quizArea = document.getElementById('quiz-area');
-    const questionList = document.getElementById('question-list');
-    const quizResult = document.getElementById('quiz-result');
-
-    // 1. 取得測驗邏輯
-   const fetchQuiz = async (quizStatus_local, quizArea_local, quizResult_local, questionList_local, startQuizBtn_local) => {
-    // 這裡使用傳入的局部元素
-    quizStatus_local.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> 正在產生試卷，請稍候...`; 
-    startQuizBtn_local.disabled = true; 
-
-    try {
-        const response = await fetch('/.netlify/functions/get_quiz');
-        const data = await response.json();
-
-        if (data.success && data.quiz.length === 10) {
-            currentQuiz = data; 
-            // 呼叫 renderQuiz 時傳入局部元素
-            renderQuiz(data.quiz, quizArea_local, quizResult_local, questionList_local); 
-            
-            quizStatus_local.className = 'mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-500 text-green-800 font-semibold'; 
-            quizStatus_local.innerHTML = `✅ 試卷產生成功！請完成所有 10 題後提交作答。`; 
-            // 這裡必須找到 submitQuizBtn 來啟用它
-            const submitQuizBtn = document.getElementById('submit-quiz-btn'); 
-            if(submitQuizBtn) submitQuizBtn.disabled = false;
-            startQuizBtn_local.textContent = '🔄 重新開始考試';
-        } else {
-            quizStatus_local.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold'; 
-            quizStatus_local.innerHTML = `❌ 試卷產生失敗：${data.message || '無法取得 10 題。'}`; 
-        }
-    } catch (error) {
-        console.error('Fetch quiz error:', error);
-        quizStatus_local.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold'; 
-        quizStatus_local.innerHTML = `❌ 連線錯誤，請檢查網路連線或後端服務。`; 
-    } finally {
-        startQuizBtn_local.disabled = false; 
-    }
-};
-
-    // 2. 渲染測驗介面
- const renderQuiz = (questions, quizArea_local, quizResult_local, questionList_local) => {
-    // 將所有全局引用替換為局部參數
-    questionList_local.innerHTML = ''; 
-    quizArea_local.style.display = 'none'; // 使用局部元素
-    quizResult_local.style.display = 'block';
-
-    questions.forEach((q, index) => {
-            const questionElement = document.createElement('div');
-            questionElement.className = 'question-card p-4 border rounded-lg shadow-sm';
-            questionElement.innerHTML = `
-                <h4 class="font-bold text-lg text-slate-700 mb-3">${index + 1}. ${q.topic}</h4>
-                <div class="options-container space-y-2" data-question-id="${q.id}">
-                    ${q.options.map((option, optIndex) => `
-                        <label class="block p-3 border rounded-lg cursor-pointer hover:bg-slate-50 transition duration-150">
-                            <input type="radio" name="question-${q.id}" value="${optIndex}" class="mr-3 text-indigo-600 focus:ring-indigo-500">
-                            <span class="font-medium text-slate-600">${String.fromCharCode(65 + optIndex)}. ${option}</span>
-                        </label>
-                    `).join('')}
-                </div>
-                <div id="feedback-${q.id}" class="mt-3 text-sm font-semibold hidden"></div>
-            `;
-            questionList.appendChild(questionElement);
-        });
-    };
-
-    // 3. 提交作答邏輯
-    const submitQuiz = async (quizResult_local, quizArea_local) => {
-    const userAnswers = [];
-        let allAnswered = true;
-        const totalQuestions = currentQuiz.quiz.length;
-
-        // 收集用戶作答結果
-        currentQuiz.quiz.forEach(q => {
-            const selected = document.querySelector(`input[name="question-${q.id}"]:checked`);
-            if (selected) {
-                userAnswers.push({
-                    questionId: q.id,
-                    selectedIndex: parseInt(selected.value)
-                });
-            } else {
-                allAnswered = false;
-            }
-        });
-
-        if (!allAnswered) {
-            alert('請完成所有 10 題作答後再提交！');
-            return;
-        }
-const submitQuizBtn = document.getElementById('submit-quiz-btn'); 
-
-    submitQuizBtn.disabled = true;
-    submitQuizBtn.textContent = '批改中...';
-    
-    try {
-            // 注意：這裡使用 .netlify/functions/submit_quiz 作為 Netlify Function 的路徑
-            const response = await fetch('/.netlify/functions/submit_quiz', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    userAnswers: userAnswers,
-                    answersCache: currentQuiz.answersCache // 將後端快取傳回給後端進行比對
-                })
-            });
-            
-           const data = await response.json();
-
-        if (data.success) {
-            // 呼叫 renderResult 時傳入 quizArea_local
-            renderResult(data, quizResult_local, quizArea_local); 
-        } else {
-            alert(`批改失敗: ${data.message}`);
-            submitQuizBtn.disabled = false;
-            submitQuizBtn.textContent = '提交作答 💾';
-        }
-    } catch (error) {
-            console.error('Submit quiz error:', error);
-            alert('提交或批改過程中發生錯誤。');
-            submitQuizBtn.disabled = false;
-            submitQuizBtn.textContent = '提交作答 💾';
-        }
-    };
-
-    // 4. 渲染成績與解析
-   const renderResult = (resultData, quizResult_local, quizArea_local) => { // 接收 quizArea_local
-    const { score, correctCount, totalQuestions, results } = resultData;
-        
-        // 顯示成績總結
-        let scoreColor = 'text-red-600';
-    if (score >= 80) scoreColor = 'text-green-600';
-    else if (score >= 60) scoreColor = 'text-orange-600';
-        quizResult_local.innerHTML = ` 
-        <div class="text-center p-6 bg-indigo-100 rounded-xl shadow-lg border-4 border-indigo-400">
-            <h3 class="text-3xl font-extrabold text-indigo-800 mb-2">模擬考成績</h3>
-            <p class="text-xl text-slate-700 mb-4">總共 ${totalQuestions} 題，答對 ${correctCount} 題</p>
-            <div class="text-7xl font-black ${scoreColor}">${score} 分</div>
-        </div>
-        <h4 class="text-2xl font-bold text-slate-700 mt-8 mb-4 border-b pb-2">試題解析</h4>
-    `;
-        
-        // 顯示每題的對錯與正確答案
-        results.forEach((r, index) => {
-            const questionData = currentQuiz.quiz.find(q => q.id === r.questionId);
-            if (!questionData) return;
-
-            const isCorrect = r.isCorrect;
-            const cardClass = isCorrect ? 'border-green-500 bg-green-50' : 'border-red-500 bg-red-50';
-            const icon = isCorrect ? '✅ 答對' : '❌ 答錯';
-            const correctOptChar = String.fromCharCode(65 + r.correctSelectedIndex);
-            const userOptChar = String.fromCharCode(65 + r.userSelectedIndex);
-            const sourceInfo = currentQuiz.answersCache.find(a => a.id === r.questionId)?.source || 'N/A';
-
-
-            quizResult_local.innerHTML += `
-                <div class="p-4 rounded-lg shadow-md mb-4 border-l-4 ${cardClass}">
-                    <h5 class="font-bold text-lg text-slate-700 mb-2">${index + 1}. ${questionData.topic}</h5>
-                    <p class="text-sm font-semibold mb-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">
-                        ${icon} (您的作答: ${userOptChar} - 正確答案: ${correctOptChar})
-                    </p>
-                    <p class="text-sm text-slate-600"><strong>來源:</strong> ${sourceInfo}</p>
-                    <p class="text-sm text-slate-600 mt-2"><strong>正確選項詳情:</strong> ${questionData.options[r.correctSelectedIndex]}</p>
-                </div>
-            `;
-        });
-        
-       quizArea.style.display = 'none'; // 這裡可以使用全局的 quizArea
-    quizResult_local.style.display = 'block';
-    submitQuizBtn.textContent = '提交作答 💾';
-};
-
-  
+   
     const chapters = [
          { id: 'manager-dashboard', title: '團隊進度儀表板', description: '主管專用：查看團隊完成清單', role: 'manager_only' },
         { id: 'chapter0', title: '菁英課程進度表', description: '追蹤你的學習進度' },
@@ -3905,7 +3704,6 @@ const submitQuizBtn = document.getElementById('submit-quiz-btn');
         { id: 'chapter10', title: '銷售篇：帶看與客戶探索', description: '從帶看到收斡的關鍵步驟' },
         { id: 'chapter11', title: '引導收斡與調價', description: '臨門一腳的藝術' },
         { id: 'chapter12', title: '總結：成為頂尖顧問的思維', description: '整合所學，內化為專業本能，成為客戶的顧問而非業務' },
-        { id: 'chapter12_5', title: '菁英課程模擬考', description: '隨機抽取 10 題，自我評量！' },
         { id: 'chapter13', title: '實用工具箱', description: '整合所有線上計算機' }
     ];
     const audioMap = {
@@ -3938,9 +3736,9 @@ const submitQuizBtn = document.getElementById('submit-quiz-btn');
         }
     }
     window.showChapterView = (chapterId) => {
-    // 檢查是否為主管儀表板，如果是，則呼叫新函數處理
+    
     if (chapterId === 'manager-dashboard') {
-         // 透過 chapters 陣列找到標題
+         
          const chapter = chapters.find(c => c.id === chapterId);
          showManagerDashboard(chapterId, chapter.title);
          return;
@@ -4002,40 +3800,12 @@ function showContent(sectionId, element) {
                 resetCarousel();
             }
         }
-   if (sectionId === 'chapter12_5') {
-    const startQuizBtn_local = newSection.querySelector('#start-quiz-btn');
-    const submitQuizBtn_local = newSection.querySelector('#submit-quiz-btn');
-    const quizStatus_local = newSection.querySelector('#quiz-status');
-    const quizResult_local = newSection.querySelector('#quiz-result');
-    const quizArea_local = newSection.querySelector('#quiz-area');
-    const questionList_local = newSection.querySelector('#question-list');
-    
-    // 檢查是否已綁定事件，避免重複綁定
-    if (startQuizBtn_local && !startQuizBtn_local._hasEventListener) {
-        
-        // 核心修正 A：傳入所有必要的局部 DOM 元素
-        startQuizBtn_local.addEventListener('click', () => {
-            
-            quizStatus_local.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
-            quizResult_local.style.display = 'none';
-            // 呼叫時傳入所有局部變數
-            fetchQuiz(quizStatus_local, quizArea_local, quizResult_local, questionList_local, startQuizBtn_local); 
-        });
-        startQuizBtn_local._hasEventListener = true; // 標記已綁定
-    }
-    
-    if (submitQuizBtn_local && !submitQuizBtn_local._hasEventListener) {
-        // 核心修正 B：呼叫時傳入 quizResult_local 和 quizArea_local
-        submitQuizBtn_local.addEventListener('click', () => submitQuiz(quizResult_local, quizArea_local)); 
-        submitQuizBtn_local._hasEventListener = true; // 標記已綁定
-    }
-}
     }
     
     function updateFloatingButtons(currentChapterId) {
     const currentIndex = chapters.findIndex(chapter => chapter.id === currentChapterId);
     
-    // 檢查：1. 不是第一個章節 2. 且不是進度表 (chapter0)
+    
     if (currentIndex > 0 && currentChapterId !== 'chapter0') { 
         const prevChapterId = chapters[currentIndex - 1].id;
         prevChapterBtn.classList.remove('hidden');
@@ -4047,7 +3817,7 @@ function showContent(sectionId, element) {
         prevChapterBtn.classList.add('hidden');
     }
     
-    // 下一章的邏輯保持不變
+    
     if (currentIndex < chapters.length - 1) {
         const nextChapterId = chapters[currentIndex + 1].id;
         nextChapterBtn.classList.remove('hidden');
@@ -4062,17 +3832,17 @@ function showContent(sectionId, element) {
     function renderTOCCards(chapterList) {
     tocContainer.innerHTML = '';
     
-    // 從 sessionStorage 獲取當前登入角色
+    
     const loggedInRole = sessionStorage.getItem('loggedInRole'); 
     
-    let chapterCount = 0; // 【新增：一個獨立的章節計數器，從 0 開始】
+    let chapterCount = 0; 
 
     chapterList.forEach((chapter, index) => {
-        // --- 業務員隱藏儀表板邏輯 (保持不變) ---
+        
         if (chapter.role === 'manager_only' && loggedInRole !== 'manager' && loggedInRole !== 'director') {
             return;
         }
-        // ----------------------------------------
+       
         
         const isManagerDashboard = chapter.id === 'manager-dashboard';
         
@@ -4083,18 +3853,18 @@ function showContent(sectionId, element) {
         let iconHtml;
 
         if (isManagerDashboard) {
-            // 主管專用儀表板：使用特殊樣式，不計數
+           
             cardClass = 'toc-card p-6 rounded-xl shadow-2xl flex flex-col items-center text-center bg-yellow-50 border-4 border-yellow-500 hover:bg-yellow-100 transition duration-300 transform hover:scale-[1.02]';
             iconHtml = `<div class="bg-yellow-600 text-white rounded-full h-12 w-12 flex items-center justify-center font-bold text-xl mb-4"><i class="fas fa-chart-line"></i></div>`;
         } else {
-            // 正常章節：使用 chapterCount 編號，並增加計數
+            
             iconHtml = `<div class="bg-indigo-100 text-indigo-600 rounded-full h-12 w-12 flex items-center justify-center font-bold text-xl mb-4">${chapterCount}</div>`;
-            chapterCount++; // 【關鍵：在這裡增加編號】
+            chapterCount++; 
         }
         
         tocCard.className = cardClass;
         
-        // 處理點擊事件
+        
         tocCard.onclick = (e) => { 
             e.preventDefault(); 
             if (isManagerDashboard) {
@@ -4133,13 +3903,13 @@ function showContent(sectionId, element) {
     appWrapper.style.display = 'block'; 
     renderTOCCards(chapters);
 
-    // 【修正開始】: 替換原本使用 index 的迴圈
+    
 
-    let navChapterCount = 0; // 新增：側邊欄的獨立計數器
+    let navChapterCount = 0; 
 
     chapters.forEach((chapter, index) => {
         
-        // 1. 業務帳號隱藏邏輯 (與目錄卡片保持一致)
+        
         if (chapter.role === 'manager_only' && loggedInRole !== 'manager' && loggedInRole !== 'director') {
             return;
         }
@@ -4151,28 +3921,28 @@ function showContent(sectionId, element) {
         navLink.className = `nav-link flex items-center py-3 px-4 rounded-lg transition duration-200`;
         navLink.dataset.chapterId = chapter.id;
         
-        // 2. 編號邏輯
+        
         let navIcon;
         if (isManagerDashboard) {
-            // 儀表板不計數，使用圖標
+            
             navIcon = '<i class="fas fa-chart-line"></i>'; 
         } else {
-            // 正常章節，使用計數器的數字
+            
             navIcon = navChapterCount;
-            navChapterCount++; // 每次顯示正常章節時遞增
+            navChapterCount++; 
         }
         
-        // 3. 設置點擊和內容
+        
         navLink.onclick = (e) => { e.preventDefault(); showChapterView(chapter.id); };
         
-        // 確保編號是 navIcon，而不是 index
+        
         navLink.innerHTML = `<span class="w-6 text-center mr-3">${navIcon}</span> ${chapter.title}`;
         sidebarNav.appendChild(navLink);
         
-        // 嘗試從模板中取得內容 (保持不變)
+        
         const content = chapterTemplate.content.querySelector('#' + chapter.id); 
         
-        // 僅當內容存在時才複製並添加到主內容區 (保持不變)
+        
         if (content) { 
              const clonedContent = content.cloneNode(true);
              mainContentArea.appendChild(clonedContent);
@@ -4244,46 +4014,46 @@ const motivationMessages = [
 function updateProgressDisplay() {
     const isManagerOrDirector = loggedInRole === 'manager' || loggedInRole === 'director';
     
-    // 【修正點 2.1】：如果處於提示狀態，則只顯示提示訊息並返回
+    
     if (currentViewingUser === 'PROMPT_SELECT' && isManagerOrDirector) {
         document.getElementById('progress-percentage').textContent = `成員進度`;
         document.getElementById('progress-bar-visual').style.width = `0%`;
         document.getElementById('progress-motivation').innerHTML = `<span class="text-lg font-extrabold text-red-600 animate-pulse">請從下拉選單中選擇一位業務員。</span>`;
-        document.getElementById('agent-progress-content').classList.add('hidden'); // 隱藏進度表內容
+        document.getElementById('agent-progress-content').classList.add('hidden'); 
         return;
     }
     
-    document.getElementById('agent-progress-content').classList.remove('hidden'); // 顯示進度表內容
-    // 過濾掉所有標題 (header)，只計算實際的進度項目
+    document.getElementById('agent-progress-content').classList.remove('hidden'); 
+   
     const progressItemsToCount = progressItems.filter(item => item.type !== 'header');
     const progressItemsCount = progressItemsToCount.length;
     let completedCount = 0;
     progressItemsToCount.forEach((item) => {
-        // ... (保持原有的進度計算邏輯不變)
+       
         const index = progressItems.findIndex(i => i.name === item.name);
         const itemData = progressData[index];
         
         let isCompleted = false;
-        // 檢查是否有計數項目
+       
        const isCheckedByManager = itemData?.checked || false; 
 
         if (item.counts && item.counts.length > 0) {
-            // 條件 B: 檢查所有計數欄位是否有填寫
+            
             const allCountsFilled = item.counts.every(countName => {
                 const value = itemData?.counts?.[countName] || '';
-                return value.trim() !== ''; // 檢查欄位是否有值
+                return value.trim() !== ''; 
             });
 
-            // 【新邏輯】：有計數欄位的項目，必須 (A: 主管勾選 AND B: 所有計數欄位已填) 才算完成
+           
             if (isCheckedByManager && allCountsFilled) {
                 isCompleted = true;
             }
         } else {
-            // 【原始邏輯】：無計數欄位的項目，只看 A: 主管是否勾選
+            
             isCompleted = isCheckedByManager;
         }
 
-        // --- 核心修改區域 END ---
+       
         
         if (isCompleted) {
             completedCount++;
@@ -4295,7 +4065,7 @@ function updateProgressDisplay() {
     const stampPlaceholder = document.getElementById('stamp-placeholder-border');
     
     if (percentage === 100) {
-        // ... (保持原有的 100% 達成邏輯不變)
+        
         if (modal) {
             modal.style.display = 'flex';
         }
@@ -4321,7 +4091,7 @@ function updateProgressDisplay() {
     if (progressBarVisual) progressBarVisual.style.width = `${percentage}%`;
     
     if (motivationText) {
-        // 【修正點 2.2】：僅在業務員模式下顯示稱號
+        
         if (loggedInRole === 'agent') {
             let fullMessage = motivationMessages.find(m => percentage >= m.percent)?.message || motivationMessages[motivationMessages.length - 1].message;
             
@@ -4335,7 +4105,7 @@ function updateProgressDisplay() {
                 : styledTitle;
             motivationText.innerHTML = finalHTML;
         } else {
-            // 主管/總監模式下，顯示普通進度訊息
+            
             motivationText.innerHTML = `當前查看：<span class="font-bold">${document.getElementById('current-progress-name').textContent}</span> 的學習進度`;
         }
     }
@@ -4371,10 +4141,10 @@ function handleProgressLogic(sectionId) {
                 return;
             }
             const isChecked = progressData[index]?.checked || false;
-            const correspondingChapterId = chapterIdMap[item.name]; // 檢查是否有對應的章節 ID
+            const correspondingChapterId = chapterIdMap[item.name]; 
             let itemNameHtml = item.name;
 
-            // 判斷是否為教育課程並且有對應章節 ID
+           
             if (item.type !== 'header' && index <= 12 && correspondingChapterId) {
                 itemNameHtml = `
                     <button class="text-indigo-600 hover:text-indigo-800 transition duration-200 text-left" 
@@ -4392,7 +4162,7 @@ function handleProgressLogic(sectionId) {
             if (item.counts) {
                 const inputs = item.counts.map(countName => {
                     const value = progressData[index]?.counts?.[countName] || '';
-                    // 【修改：標籤寬度 w-12，輸入框寬度 w-16】
+                   
                     return ` <div class="flex items-center space-x-2"> <label class="text-slate-600 w-20 text-right flex-shrink-0">${countName}:</label> <input type="text" value="${value}" ${disabledAttr} data-index="${index}" data-count-name="${countName}" class="count-input w-16 text-center border rounded py-1 px-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" placeholder="次數"> </div>`;
                 }).join('');
                 countInputsHTML = `<div class="flex flex-wrap items-center justify-start gap-2 mt-2 md:mt-0">${inputs}</div>`;
@@ -4426,7 +4196,7 @@ function handleProgressLogic(sectionId) {
         const index = e.target.dataset.index;
         if (index === undefined) return;
         if (loggedInRole === 'agent' && (e.target.type === 'checkbox' || e.target.classList.contains('count-input') || e.target.classList.contains('date-input'))) {
-                 // 雖然 HTML 已經 disabled，這裡加上一層 JS 保護
+                 
                  e.target.checked = !e.target.checked; 
                  alert("業務帳號只能查看，請聯繫您的主管進行進度勾選與記錄！");
                  return;
@@ -4434,23 +4204,23 @@ function handleProgressLogic(sectionId) {
        
         const isCheckbox = e.target.type === 'checkbox';
         const isCountInput = e.target.classList.contains('count-input');
-        const isRemarkInput = e.target.classList.contains('remark-input'); // 【新增：備註欄位判斷】
+        const isRemarkInput = e.target.classList.contains('remark-input'); 
         
-        if (isCheckbox || isCountInput || isRemarkInput) { // 【修改：將 isDateInput 替換為 isRemarkInput】
+        if (isCheckbox || isCountInput || isRemarkInput) {
             if (!progressData[index]) {
                 progressData[index] = {};
             }
             if (isCheckbox) {
                 progressData[index].checked = e.target.checked;
-                // 【注意：這裡移除了舊的日期連動邏輯】
+                
            if (e.target.checked) {
                     const today = new Date().toISOString().split('T')[0];
                     progressData[index].completionDate = today;
                 } else {
-                    // 取消勾選時，清空日期
+                    
                     progressData[index].completionDate = '';
                 }
-                // 【注意】：這裡的日期更新邏輯會被下面的 saveProgress() 觸發的 renderProgressTable() 處理
+               
             } else if (isCountInput) {
                 const countName = e.target.dataset.countName;
                 if (!progressData[index].counts) {
@@ -4458,14 +4228,14 @@ function handleProgressLogic(sectionId) {
                 }
                 
                 progressData[index].counts[countName] = e.target.value; 
-            } else if (isRemarkInput) { // 【新增：備註邏輯】
+            } else if (isRemarkInput) { 
                 progressData[index].remark = e.target.value;
                 
-                // 【核心新功能】：只要備註有變動，就自動更新進度日期
+               
                 const today = new Date().toISOString().split('T')[0];
                 progressData[index].completionDate = today;
                 
-                // 實時更新顯示的日期
+               
                 const itemWrapper = e.target.closest('.progress-item');
                 const dateDisplay = itemWrapper.querySelector('.text-xs');
                 if (dateDisplay) {
@@ -4475,7 +4245,7 @@ function handleProgressLogic(sectionId) {
             
             saveProgress();
             
-            // 如果是勾選框，需要重新渲染才能正確更新日期顯示
+            
             if (isCheckbox) {
                 renderProgressTable();
             }
@@ -4645,7 +4415,7 @@ function handleProgressLogic(sectionId) {
     document.body.addEventListener('click', (e) => {
         if (e.target.closest('#back-to-dashboard-btn')) {
             e.preventDefault();
-            // 呼叫主管專用的儀表板顯示函數
+            
             window.showChapterView('manager-dashboard');
         }
     });
@@ -4655,14 +4425,14 @@ function handleProgressLogic(sectionId) {
    if (loggedInRole === 'manager' || loggedInRole === 'director') { 
         managerControlPanel.classList.remove('hidden');
         
-        // 核心修改點：動態獲取並填充組員列表
+        
         fetchTeamMembers(loggedInTeam); 
     } else {
-        // 業務帳號隱藏面板，並在進度表上顯示是「誰的」進度
+        
         const loggedInName = sessionStorage.getItem('loggedInName');
         const progressHeader = document.getElementById('progress-percentage');
         if (progressHeader) {
-            // 這裡不再顯示 0%，因為 loadProgressFromFirebase 會更新
+            
             progressHeader.innerHTML = `總體進度：0% <span class="text-sm font-normal text-indigo-700 ml-2">(${loggedInName} 的進度)</span>`;
         }
     }
@@ -4768,7 +4538,6 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
-
 
 
 
