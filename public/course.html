@@ -4782,8 +4782,10 @@ function handleProgressLogic(sectionId) {
             const resultTitle = isCorrect ? '恭喜答對！' : '很可惜答錯了！';
             
             
-            quizQuestionsArea.querySelector(`[data-question-id="${question.id}"]`).classList.add(colorClass);
-            quizQuestionsArea.querySelector(`[data-question-id="${question.id}"]`).classList.remove('border-slate-200');
+            // --- 修正區域：使用 className 賦值替代 classList.add(包含空格的字串) ---
+            const questionDiv = quizQuestionsArea.querySelector(`[data-question-id="${question.id}"]`);
+            questionDiv.className += ` ${colorClass}`; // 使用 += 附加新的類別
+            // --- 修正區域結束 ---
 
             
             const optionsArea = quizQuestionsArea.querySelector(`[data-question-id="${question.id}"] #options-${question.id}`);
@@ -4879,6 +4881,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
