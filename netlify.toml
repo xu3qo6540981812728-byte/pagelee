@@ -1,5 +1,5 @@
 [functions]
-  # 確保 quiz_data.json 被明確打包進 Functions 部署包中
+  # 告訴 Netlify Functions 部署時，要將這個檔案一起包含進去
   included_files = ["netlify/functions/quiz_data.json"] 
 
 [build]
