@@ -4701,6 +4701,14 @@ function handleProgressLogic(sectionId) {
    function startQuiz() {
         quizQuestionsArea.innerHTML = '';
         isQuizSubmitted = false;
+       if (quizQuestionsArea) {quizQuestionsArea.style.pointerEvents = 'auto';
+
+       quizContainer.querySelectorAll('.quiz-question').forEach(q => {
+         q.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
+    });
+
+                               quizResultArea.classList.add('hidden'); // 隱藏上次的測驗結果
+    submitQuizBtn.classList.remove('hidden'); // 顯示提交按鈕
         
         // 渲染題目
         currentQuiz.forEach((q, index) => {
@@ -4891,6 +4899,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
