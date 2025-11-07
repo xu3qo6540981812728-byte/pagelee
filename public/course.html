@@ -3188,16 +3188,7 @@
 </div>
     <script>
         let allMemberProgressDetails = {};
-        console.log('--- Script loaded successfully ---');
-const startQuizBtn = document.getElementById('start-quiz-btn');
-console.log('startQuizBtn found:', !!startQuizBtn); 
-
-if (startQuizBtn) {
-    startQuizBtn.addEventListener('click', () => {
-        console.log('--- Start Quiz button clicked ---');
-        // ... (原來的 fetchQuiz() 邏輯會在這裡執行)
-    });
-}
+       
 document.addEventListener('DOMContentLoaded', () => {
    
     const audioPlayerContainer = document.getElementById('audio-player-container');
@@ -3735,34 +3726,36 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     const quizResult = document.getElementById('quiz-result');
 
     // 1. 取得測驗邏輯
-    const fetchQuiz = async () => {
-        quizStatus.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> 正在產生試卷，請稍候...`;
-        startQuizBtn.disabled = true;
+   const fetchQuiz = async (quizStatus_local, quizArea_local, quizResult_local, startQuizBtn_local) => { 
+    
+    // 將所有對 quizStatus/startQuizBtn 的引用替換成參數
+    quizStatus_local.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> 正在產生試卷，請稍候...`; 
+    startQuizBtn_local.disabled = true; 
 
-        try {
-            // 注意：這裡使用 .netlify/functions/get_quiz 作為 Netlify Function 的路徑
-            const response = await fetch('/.netlify/functions/get_quiz');
-            const data = await response.json();
+    try {
+        // 注意：這裡使用 .netlify/functions/get_quiz 作為 Netlify Function 的路徑
+        const response = await fetch('/.netlify/functions/get_quiz');
+        const data = await response.json();
 
-            if (data.success && data.quiz.length === 10) {
-                currentQuiz = data; // 儲存題目和後端答案快取
-                renderQuiz(data.quiz);
-                quizStatus.className = 'mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-500 text-green-800 font-semibold';
-                quizStatus.innerHTML = `✅ 試卷產生成功！請完成所有 10 題後提交作答。`;
-                submitQuizBtn.disabled = false;
-                startQuizBtn.textContent = '🔄 重新開始考試';
-            } else {
-                quizStatus.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold';
-                quizStatus.innerHTML = `❌ 試卷產生失敗：${data.message || '無法取得 10 題。'}`;
-            }
-        } catch (error) {
-            console.error('Fetch quiz error:', error);
-            quizStatus.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold';
-            quizStatus.innerHTML = `❌ 連線錯誤，請檢查網路連線或後端服務。`;
-        } finally {
-            startQuizBtn.disabled = false;
+        if (data.success && data.quiz.length === 10) {
+            currentQuiz = data; // 儲存題目和後端答案快取
+            renderQuiz(data.quiz);
+            quizStatus_local.className = 'mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-500 text-green-800 font-semibold'; 
+            quizStatus_local.innerHTML = `✅ 試卷產生成功！請完成所有 10 題後提交作答。`; 
+            // 注意：這裡無法直接操作 submitQuizBtn.disabled，因為它不是參數。
+            // 我們假設 renderQuiz 會讓 submitQuizBtn 可用 (這是原始程式碼的設計，我們將在 showContent 中調整調用)
+        } else {
+            quizStatus_local.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold'; 
+            quizStatus_local.innerHTML = `❌ 試卷產生失敗：${data.message || '無法取得 10 題。'}`; 
         }
-    };
+    } catch (error) {
+        console.error('Fetch quiz error:', error);
+        quizStatus_local.className = 'mb-6 p-4 bg-red-50 rounded-lg border-l-4 border-red-500 text-red-800 font-semibold'; 
+        quizStatus_local.innerHTML = `❌ 連線錯誤，請檢查網路連線或後端服務。`; 
+    } finally {
+        startQuizBtn_local.disabled = false; 
+    }
+};
 
     // 2. 渲染測驗介面
     const renderQuiz = (questions) => {
@@ -3790,8 +3783,8 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     };
 
     // 3. 提交作答邏輯
-    const submitQuiz = async () => {
-        const userAnswers = [];
+    const submitQuiz = async (quizResult_local) => { 
+    const userAnswers = [];
         let allAnswered = true;
         const totalQuestions = currentQuiz.quiz.length;
 
@@ -3812,7 +3805,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             alert('請完成所有 10 題作答後再提交！');
             return;
         }
-
+const submitQuizBtn = document.getElementById('submit-quiz-btn');
         submitQuizBtn.disabled = true;
         submitQuizBtn.textContent = '批改中...';
         
@@ -3827,16 +3820,16 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
                 })
             });
             
-            const data = await response.json();
+           const data = await response.json();
 
-            if (data.success) {
-                renderResult(data);
-            } else {
-                alert(`批改失敗: ${data.message}`);
-                submitQuizBtn.disabled = false;
-                submitQuizBtn.textContent = '提交作答 💾';
-            }
-        } catch (error) {
+        if (data.success) {
+            renderResult(data, quizResult_local); // 將 result_local 傳入 renderResult
+        } else {
+            alert(`批改失敗: ${data.message}`);
+            submitQuizBtn.disabled = false;
+            submitQuizBtn.textContent = '提交作答 💾';
+        }
+    } catch (error) {
             console.error('Submit quiz error:', error);
             alert('提交或批改過程中發生錯誤。');
             submitQuizBtn.disabled = false;
@@ -3845,22 +3838,21 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
     };
 
     // 4. 渲染成績與解析
-    const renderResult = (resultData) => {
-        const { score, correctCount, totalQuestions, results } = resultData;
+    const renderResult = (resultData, quizResult_local) => {
+    const { score, correctCount, totalQuestions, results } = resultData;
         
         // 顯示成績總結
         let scoreColor = 'text-red-600';
-        if (score >= 80) scoreColor = 'text-green-600';
-        else if (score >= 60) scoreColor = 'text-orange-600';
-
-        quizResult.innerHTML = `
-            <div class="text-center p-6 bg-indigo-100 rounded-xl shadow-lg border-4 border-indigo-400">
-                <h3 class="text-3xl font-extrabold text-indigo-800 mb-2">模擬考成績</h3>
-                <p class="text-xl text-slate-700 mb-4">總共 ${totalQuestions} 題，答對 ${correctCount} 題</p>
-                <div class="text-7xl font-black ${scoreColor}">${score} 分</div>
-            </div>
-            <h4 class="text-2xl font-bold text-slate-700 mt-8 mb-4 border-b pb-2">試題解析</h4>
-        `;
+    if (score >= 80) scoreColor = 'text-green-600';
+    else if (score >= 60) scoreColor = 'text-orange-600';
+        quizResult_local.innerHTML = ` 
+        <div class="text-center p-6 bg-indigo-100 rounded-xl shadow-lg border-4 border-indigo-400">
+            <h3 class="text-3xl font-extrabold text-indigo-800 mb-2">模擬考成績</h3>
+            <p class="text-xl text-slate-700 mb-4">總共 ${totalQuestions} 題，答對 ${correctCount} 題</p>
+            <div class="text-7xl font-black ${scoreColor}">${score} 分</div>
+        </div>
+        <h4 class="text-2xl font-bold text-slate-700 mt-8 mb-4 border-b pb-2">試題解析</h4>
+    `;
         
         // 顯示每題的對錯與正確答案
         results.forEach((r, index) => {
@@ -3875,7 +3867,7 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             const sourceInfo = currentQuiz.answersCache.find(a => a.id === r.questionId)?.source || 'N/A';
 
 
-            quizResult.innerHTML += `
+            quizResult_local.innerHTML += `
                 <div class="p-4 rounded-lg shadow-md mb-4 border-l-4 ${cardClass}">
                     <h5 class="font-bold text-lg text-slate-700 mb-2">${index + 1}. ${questionData.topic}</h5>
                     <p class="text-sm font-semibold mb-2 ${isCorrect ? 'text-green-700' : 'text-red-700'}">
@@ -3887,10 +3879,10 @@ const loggedInRole = sessionStorage.getItem('loggedInRole');
             `;
         });
         
-        quizArea.style.display = 'none';
-        quizResult.style.display = 'block';
-        submitQuizBtn.textContent = '提交作答 💾';
-    };
+       quizArea.style.display = 'none'; // 這裡可以使用全局的 quizArea
+    quizResult_local.style.display = 'block';
+    submitQuizBtn.textContent = '提交作答 💾';
+};
 
   
     const chapters = [
@@ -4005,32 +3997,36 @@ function showContent(sectionId, element) {
                 resetCarousel();
             }
         }
-    if (sectionId === 'chapter12_5') {
-            // 由於 newSection 已經是 chapter12_5 的內容，我們可以在這裡找到按鈕
-            const startQuizBtn_local = newSection.querySelector('#start-quiz-btn');
-            const submitQuizBtn_local = newSection.querySelector('#submit-quiz-btn');
+   if (sectionId === 'chapter12_5') {
+    const startQuizBtn_local = newSection.querySelector('#start-quiz-btn');
+    const submitQuizBtn_local = newSection.querySelector('#submit-quiz-btn');
+    const quizStatus_local = newSection.querySelector('#quiz-status'); // 新增：獲取 quizStatus
+    const quizResult_local = newSection.querySelector('#quiz-result'); // 新增：獲取 quizResult
+    const quizArea_local = newSection.querySelector('#quiz-area'); // 新增：獲取 quizArea (雖然只用全局變數)
+    
+    // 檢查是否已綁定事件，避免重複綁定
+    if (startQuizBtn_local && !startQuizBtn_local._hasEventListener) {
+        
+        // 【核心修正 A】：傳入所需的局部 DOM 元素
+        startQuizBtn_local.addEventListener('click', () => {
+            const quizStatus_current = newSection.querySelector('#quiz-status');
+            const quizResult_current = newSection.querySelector('#quiz-result');
+            const quizArea_current = newSection.querySelector('#quiz-area');
             
-            // 檢查是否已綁定事件，避免重複綁定
-            if (startQuizBtn_local && !startQuizBtn_local._hasEventListener) {
-                
-                // 【核心修正】: 將 startQuizBtn, submitQuizBtn 的變數引用改為局部變數
-                startQuizBtn_local.addEventListener('click', () => {
-                    // 重設狀態並重新發題
-                    const quizStatus_local = newSection.querySelector('#quiz-status');
-                    const quizResult_local = newSection.querySelector('#quiz-result');
-                    
-                    quizStatus_local.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
-                    quizResult_local.style.display = 'none';
-                    fetchQuiz(); // 呼叫原本的 fetchQuiz 函數
-                });
-                startQuizBtn_local._hasEventListener = true; // 標記已綁定
-            }
-            
-            if (submitQuizBtn_local && !submitQuizBtn_local._hasEventListener) {
-                submitQuizBtn_local.addEventListener('click', submitQuiz); // 呼叫原本的 submitQuiz 函數
-                submitQuizBtn_local._hasEventListener = true; // 標記已綁定
-            }
-        }
+            quizStatus_current.className = 'mb-6 p-4 bg-indigo-50 rounded-lg border-l-4 border-indigo-500 text-indigo-800 font-semibold';
+            quizResult_current.style.display = 'none';
+            // 呼叫時傳入局部變數
+            fetchQuiz(quizStatus_current, quizArea_current, quizResult_current, startQuizBtn_local); 
+        });
+        startQuizBtn_local._hasEventListener = true; // 標記已綁定
+    }
+    
+    if (submitQuizBtn_local && !submitQuizBtn_local._hasEventListener) {
+        // 【核心修正 B】：呼叫時傳入 quizResult_local
+        submitQuizBtn_local.addEventListener('click', () => submitQuiz(quizResult_local)); 
+        submitQuizBtn_local._hasEventListener = true; // 標記已綁定
+    }
+}
     }
     
     function updateFloatingButtons(currentChapterId) {
@@ -4769,6 +4765,7 @@ function handleProgressLogic(sectionId) {
     
 </body>
 </html>
+
 
 
 
