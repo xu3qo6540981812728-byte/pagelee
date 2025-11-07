@@ -4619,7 +4619,12 @@ function handleProgressLogic(sectionId) {
         });
         
         submitQuizBtn.disabled = !allAnswered;
+    if (submitQuizBtn.disabled) {
+        submitQuizBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        submitQuizBtn.classList.remove('opacity-50', 'cursor-not-allowed');
     }
+}
 
    function handleOptionClick(event) {
         if (isQuizSubmitted) return; 
@@ -4916,6 +4921,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
