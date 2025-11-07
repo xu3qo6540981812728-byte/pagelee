@@ -4804,7 +4804,7 @@ function handleProgressLogic(sectionId) {
         document.getElementById('final-score').textContent = result.score;
         document.getElementById('correct-count-display').textContent = `答對題數：${result.correctCount} / ${result.totalQuestions} 題`;
         
-       
+       let detailedResultsHtml = ''
         result.results.forEach((res, index) => {
             const question = currentQuiz.find(q => q.id === res.questionId);
             if (!question) return;
@@ -4912,6 +4912,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
