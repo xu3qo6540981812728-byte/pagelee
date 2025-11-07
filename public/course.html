@@ -4698,19 +4698,36 @@ function handleProgressLogic(sectionId) {
         }
     }
 
-   function startQuiz() {
-        quizQuestionsArea.innerHTML = '';
-        isQuizSubmitted = false;
-       if (quizQuestionsArea) {quizQuestionsArea.style.pointerEvents = 'auto';
+  function startQuiz() {
+    // 1. 清除題目內容並重置提交狀態
+    quizQuestionsArea.innerHTML = '';
+    isQuizSubmitted = false;
 
-       quizContainer.querySelectorAll('.quiz-question').forEach(q => {
-         q.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
-    });
+    // 2. 【關鍵修正】恢復點擊事件
+    if (quizQuestionsArea) {
+        quizQuestionsArea.style.pointerEvents = 'auto'; 
+    }
 
-                               quizResultArea.classList.add('hidden'); // 隱藏上次的測驗結果
-    submitQuizBtn.classList.remove('hidden'); // 顯示提交按鈕
+    // 3. 【關鍵修正】清除舊的成績樣式（確保 quizContainer 已被正確賦值）
+    //    注意：這個迴圈必須遍歷所有舊選項，將其還原為初始狀態
+    quizQuestionsArea.querySelectorAll('.quiz-question').forEach(q => {
+        // 清除題目區塊的邊框和背景色
+        q.classList.remove('border-green-500', 'bg-green-50', 'border-red-500', 'bg-red-50');
         
-        // 渲染題目
+        // 遍歷選項，清除選中、對錯標誌、背景色和透明度
+        q.querySelectorAll('.option-item').forEach(item => {
+            item.classList.remove('selected', 'bg-indigo-100', 'border-indigo-500', 'opacity-50', 'bg-green-200', 'border-green-600', 'bg-red-200', 'border-red-600');
+            item.classList.add('border-slate-200', 'cursor-pointer', 'hover:bg-indigo-50');
+            item.querySelector('.correct-icon').classList.add('hidden');
+            item.querySelector('.incorrect-icon').classList.add('hidden');
+        });
+    });
+    
+    // 4. 【關鍵修正】切換按鈕顯示狀態
+    quizResultArea.classList.add('hidden');      // 隱藏上次的測驗結果
+    submitQuizBtn.classList.remove('hidden');    // 顯示提交按鈕
+    
+    // 渲染題目
         currentQuiz.forEach((q, index) => {
             quizQuestionsArea.appendChild(renderQuestion(q, index));
         });
@@ -4899,6 +4916,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
