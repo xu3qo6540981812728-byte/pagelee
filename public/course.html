@@ -4658,7 +4658,8 @@ function handleProgressLogic(sectionId) {
     }
 
     async function fetchQuiz() {
-        
+        document.body.scrollTop = 0; // For Safari
+    document.documentElement.scrollTop = 0; // For Chrome, Firefox, IE and Opera
         // 在這裡重新賦值，確保使用的是當前活動的 DOM 元素
         quizContainer = document.getElementById('quiz-container');
         quizStatus = document.getElementById('quiz-status');
@@ -4945,6 +4946,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
