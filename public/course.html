@@ -4702,13 +4702,32 @@ function handleProgressLogic(sectionId) {
                 quizStatus.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>載入失敗：${data.message || '後端題目庫無資料或連線錯誤。'}`;
             }
         } catch (error) {
-            console.error('Fetch quiz error:', error);
-            quizStatus.className = 'mb-4 p-4 bg-red-100 rounded-lg text-red-800 font-semibold text-center';
-            quizStatus.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>連線錯誤：無法從伺服器載入題目。`;
-        }
+    console.error('Fetch quiz error:', error);
+    quizStatus.className = 'mb-4 p-4 bg-red-100 rounded-lg text-red-800 font-semibold text-center';
+    quizStatus.innerHTML = `<i class="fas fa-exclamation-triangle mr-2"></i>連線錯誤：無法從伺服器載入題目。請<b class="text-red-900">重新整理頁面</b>後再試！`;
+    
+    // 【關鍵點】: 即使載入失敗，也要讓使用者可以重新嘗試點擊開始按鈕
+    startQuizBtn.classList.remove('hidden'); 
+    startQuizBtn.textContent = '重新載入題目'; 
+}
     }
 
   function startQuiz() {
+const loggedInUser = sessionStorage.getItem('loggedInUser');
+    if (!loggedInUser) {
+        alert("系統閒置超時，您的登入狀態已失效，請重新登入！");
+        // 假設 performLogout() 函數存在於您的全局範圍內
+        window.performLogout(); 
+        return;
+    }
+    
+    // 檢查 2：確認題目是否已成功載入
+    if (!currentQuiz || currentQuiz.length === 0) {
+        alert("題目載入失敗或尚未準備好，請稍候片刻或點擊重試。");
+        // 可以選擇重新呼叫 fetchQuiz() 來嘗試修復
+        fetchQuiz(); 
+        return;
+    }
     // 1. 清除題目內容並重置提交狀態
     quizQuestionsArea.innerHTML = '';
     isQuizSubmitted = false;
@@ -4926,6 +4945,7 @@ if (mainContentArea) {
     
 </body>
 </html>
+
 
 
 
